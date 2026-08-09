@@ -4,11 +4,12 @@ import { prisma } from "@/lib/db";
 // POST /api/approvals/[id]/reject
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const item = await prisma.approvalItem.update({
-      where: { id: params.id },
+      where: { id },
       data: { status: "rejected", updatedAt: new Date() },
     });
     return NextResponse.json({ success: true, item });

@@ -2,11 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { BUSINESS_ID } from "@/lib/utils";
 
-// GET /api/approvals — list all pending approval items
-export async function GET() {
+// GET /api/approvals — list approval items (filter by ?status=pending|approved|rejected|all)
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  const statusFilter = searchParams.get("status") || "pending";
+
+  const whereStatus =
+    statusFilter === "all" ? {} : { status: statusFilter };
+
   const items = await prisma.approvalItem.findMany({
     where: {
-      status: "pending",
+      ...whereStatus,
       agentRun: { conversation: { businessId: BUSINESS_ID } },
     },
     include: {
