@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState, useRef } from "react";
-import { MessageSquare, Bot, CheckCircle, XCircle, Loader } from "lucide-react";
+import { MessageSquare, Bot, CheckCircle, XCircle, Loader, ChevronDown, ChevronUp, Phone, Package, FileText } from "lucide-react";
 
 interface Message {
   id: string;
@@ -68,6 +68,204 @@ function timeAgo(date: string) {
   if (secs < 3600) return `${Math.floor(secs / 60)}m ago`;
   if (secs < 86400) return `${Math.floor(secs / 3600)}h ago`;
   return `${Math.floor(secs / 86400)}d ago`;
+}
+
+type QuoteItem = { name: string; qty: number; unitPrice: number; total: number };
+type CallScriptStep = { step: string; script: string };
+type RestockItem = { item: string; qty: number; supplier: string; estimatedCost?: number };
+
+function QuotePreview({ content }: { content: Record<string, unknown> }) {
+  const items = content.items as QuoteItem[] | undefined;
+  const total = content.total as number | undefined;
+  if (!items?.length) return null;
+  return (
+    <div className="mt-2 bg-slate-950/60 rounded-lg border border-slate-700/50 overflow-hidden">
+      <table className="w-full text-xs">
+        <thead>
+          <tr className="border-b border-slate-700/50 text-slate-500">
+            <th className="text-left px-3 py-1.5 font-medium">Item</th>
+            <th className="text-right px-3 py-1.5 font-medium">Qty</th>
+            <th className="text-right px-3 py-1.5 font-medium">Price</th>
+            <th className="text-right px-3 py-1.5 font-medium">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          {items.map((it, i) => (
+            <tr key={i} className={i < items.length - 1 ? "border-b border-slate-800/40" : ""}>
+              <td className="px-3 py-1.5 text-slate-200">{it.name}</td>
+              <td className="px-3 py-1.5 text-right text-slate-400">{it.qty}</td>
+              <td className="px-3 py-1.5 text-right text-slate-400">${it.unitPrice?.toFixed(2)}</td>
+              <td className="px-3 py-1.5 text-right text-green-400 font-medium">${it.total?.toFixed(2)}</td>
+            </tr>
+          ))}
+        </tbody>
+        {!!total && (
+          <tfoot>
+            <tr className="border-t border-slate-700/50">
+              <td colSpan={3} className="px-3 py-1.5 text-slate-400 font-medium">Total</td>
+              <td className="px-3 py-1.5 text-right text-green-300 font-bold">SGD {total.toFixed(2)}</td>
+            </tr>
+          </tfoot>
+        )}
+      </table>
+    </div>
+  );
+}
+
+function CallScriptPreview({ content }: { content: Record<string, unknown> }) {
+  const steps = content.script as CallScriptStep[] | undefined;
+  const greeting = content.greeting as string | undefined;
+  if (!steps?.length && !greeting) return null;
+  return (
+    <div className="mt-2 space-y-1.5">
+      {!!greeting && (
+        <div className="text-xs text-slate-400 bg-slate-950/60 rounded-lg px-3 py-2 border border-slate-700/50">
+          <span className="text-slate-500 font-medium">Greeting: </span>{greeting}
+        </div>
+      )}
+      {steps?.map((s, i) => (
+        <div key={i} className="bg-slate-950/60 rounded-lg px-3 py-2 border border-slate-700/50">
+          <div className="text-xs font-semibold text-green-400 mb-0.5">
+            {i + 1}. {s.step}
+          </div>
+          <div className="text-xs text-slate-300 leading-relaxed">{s.script}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function RestockPreview({ content }: { content: Record<string, unknown> }) {
+  const items = content.items as RestockItem[] | undefined;
+  if (!items?.length) return null;
+  return (
+    <div className="mt-2 space-y-1.5">
+      {items.map((it, i) => (
+        <div key={i} className="flex items-center justify-between bg-slate-950/60 rounded-lg px-3 py-2 border border-slate-700/50">
+          <div>
+            <div className="text-xs font-medium text-slate-200">{it.item}</div>
+            <div className="text-xs text-slate-500">{it.supplier}</div>
+          </div>
+          <div className="text-right">
+            <div className="text-xs text-orange-300 font-medium">Qty: {it.qty}</div>
+            {!!it.estimatedCost && (
+              <div className="text-xs text-slate-400">~${it.estimatedCost}</div>
+            )}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ApprovalCard({
+  item,
+  onApprove,
+  onReject,
+}: {
+  item: ApprovalItem;
+  onApprove: (id: string) => void;
+  onReject: (id: string) => void;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const colorClass = AGENT_COLORS[item.type] || "text-slate-300 bg-slate-800 border-slate-700";
+  const content = item.content as Record<string, unknown> | null;
+  const preview =
+    content?.whatsappReply ||
+    content?.summary ||
+    content?.notes ||
+    content?.action ||
+    content?.recommendation;
+
+  const hasDetails =
+    (item.type === "quote" && !!(content?.items as unknown[])?.length) ||
+    (item.type === "call" && (!!(content?.script as unknown[])?.length || !!content?.greeting)) ||
+    (item.type === "restock" && !!(content?.items as unknown[])?.length);
+
+  const typeIcon =
+    item.type === "quote" ? <FileText className="w-3 h-3" /> :
+    item.type === "call" ? <Phone className="w-3 h-3" /> :
+    item.type === "restock" ? <Package className="w-3 h-3" /> : null;
+
+  return (
+    <div className={`rounded-lg border ${colorClass}`}>
+      <div className="p-3">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider opacity-70 mb-0.5">
+              {typeIcon}
+              {item.type}
+            </div>
+            <div className="text-sm font-semibold text-white">{item.title}</div>
+            {!!preview && !expanded && (
+              <p className="text-xs opacity-75 mt-1 line-clamp-2">{String(preview)}</p>
+            )}
+          </div>
+
+          <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
+            {item.status === "pending" && (
+              <div className="flex gap-1.5">
+                <button
+                  onClick={() => onApprove(item.id)}
+                  className="flex items-center gap-1 text-xs bg-green-700 hover:bg-green-600 text-white px-2.5 py-1 rounded-md transition-colors font-medium"
+                >
+                  <CheckCircle className="w-3 h-3" /> Approve
+                </button>
+                <button
+                  onClick={() => onReject(item.id)}
+                  className="flex items-center gap-1 text-xs bg-slate-700 hover:bg-red-700 text-white px-2.5 py-1 rounded-md transition-colors"
+                >
+                  <XCircle className="w-3 h-3" /> Reject
+                </button>
+              </div>
+            )}
+            {item.status !== "pending" && (
+              <span
+                className={`text-xs px-2 py-0.5 rounded-full ${
+                  item.status === "approved"
+                    ? "bg-green-900/60 text-green-400"
+                    : "bg-slate-700 text-slate-400"
+                }`}
+              >
+                {item.status === "approved" ? "✓ Approved" : "✗ Rejected"}
+              </span>
+            )}
+            {hasDetails && (
+              <button
+                onClick={() => setExpanded(!expanded)}
+                className="text-xs flex items-center gap-0.5 opacity-60 hover:opacity-100 transition-opacity"
+              >
+                {expanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                {expanded ? "Less" : "Details"}
+              </button>
+            )}
+          </div>
+        </div>
+
+        {expanded && content && (
+          <div className="mt-1">
+            {item.type === "quote" && <QuotePreview content={content} />}
+            {item.type === "call" && <CallScriptPreview content={content} />}
+            {item.type === "restock" && <RestockPreview content={content} />}
+            {item.type === "reply" && !!content.whatsappReply && (
+              <div className="mt-2 bg-slate-950/60 rounded-lg px-3 py-2 border border-slate-700/50 text-xs text-slate-300 leading-relaxed whitespace-pre-wrap">
+                {String(content.whatsappReply)}
+              </div>
+            )}
+            {item.type === "tasks" && !!(content.tasks as unknown[])?.length && (
+              <div className="mt-2 space-y-1">
+                {(content.tasks as string[]).map((t: string, i: number) => (
+                  <div key={i} className="text-xs text-slate-300 flex items-start gap-1.5">
+                    <span className="text-purple-400 mt-0.5">•</span> {t}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }
 
 function AgentRunCard({
@@ -145,61 +343,14 @@ function AgentRunCard({
 
       {run.approvalItems.length > 0 ? (
         <div className="p-3 space-y-2">
-          {run.approvalItems.map((item) => {
-            const colorClass = AGENT_COLORS[item.type] || "text-slate-300 bg-slate-800 border-slate-700";
-            const content = item.content as Record<string, unknown> | null;
-            const preview =
-              content?.whatsappReply ||
-              content?.summary ||
-              content?.notes ||
-              content?.action ||
-              content?.recommendation;
-
-            return (
-              <div key={item.id} className={`p-3 rounded-lg border ${colorClass}`}>
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex-1 min-w-0">
-                    <div className="text-xs font-bold uppercase tracking-wider opacity-70 mb-0.5">
-                      {item.type}
-                    </div>
-                    <div className="text-sm font-semibold text-white">{item.title}</div>
-                    {!!preview && (
-                      <p className="text-xs opacity-75 mt-1 line-clamp-2">{String(preview)}</p>
-                    )}
-                  </div>
-
-                  {item.status === "pending" && (
-                    <div className="flex gap-1.5 flex-shrink-0 mt-0.5">
-                      <button
-                        onClick={() => onApprove(item.id)}
-                        className="flex items-center gap-1 text-xs bg-green-700 hover:bg-green-600 text-white px-2.5 py-1 rounded-md transition-colors font-medium"
-                      >
-                        <CheckCircle className="w-3 h-3" /> Approve
-                      </button>
-                      <button
-                        onClick={() => onReject(item.id)}
-                        className="flex items-center gap-1 text-xs bg-slate-700 hover:bg-red-700 text-white px-2.5 py-1 rounded-md transition-colors"
-                      >
-                        <XCircle className="w-3 h-3" /> Reject
-                      </button>
-                    </div>
-                  )}
-
-                  {item.status !== "pending" && (
-                    <span
-                      className={`text-xs px-2 py-0.5 rounded-full flex-shrink-0 ${
-                        item.status === "approved"
-                          ? "bg-green-900/60 text-green-400"
-                          : "bg-slate-700 text-slate-400"
-                      }`}
-                    >
-                      {item.status === "approved" ? "✓ Approved" : "✗ Rejected"}
-                    </span>
-                  )}
-                </div>
-              </div>
-            );
-          })}
+          {run.approvalItems.map((item) => (
+            <ApprovalCard
+              key={item.id}
+              item={item}
+              onApprove={onApprove}
+              onReject={onReject}
+            />
+          ))}
         </div>
       ) : run.status === "running" ? (
         <div className="p-4 text-center text-sm text-slate-400">
