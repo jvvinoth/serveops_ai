@@ -1,0 +1,177 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Business {
+  id          String   @id @default(cuid())
+  name        String
+  type        String
+  waNumber    String?
+  waConnected Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  customers     Customer[]
+  conversations Conversation[]
+  menuItems     MenuItem[]
+  inventory     InventoryItem[]
+  staffShifts   StaffShift[]
+  suppliers     Supplier[]
+  tasks         Task[]
+  quotes        Quote[]
+}
+
+model Customer {
+  id         String   @id @default(cuid())
+  businessId String
+  name       String
+  phone      String
+  company    String?
+  notes      String?
+  createdAt  DateTime @default(now())
+
+  business      Business       @relation(fields: [businessId], references: [id])
+  conversations Conversation[]
+}
+
+model Conversation {
+  id         String   @id @default(cuid())
+  businessId String
+  customerId String
+  status     String   @default("open")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  business  Business   @relation(fields: [businessId], references: [id])
+  customer  Customer   @relation(fields: [customerId], references: [id])
+  messages  Message[]
+  agentRuns AgentRun[]
+}
+
+model Message {
+  id             String   @id @default(cuid())
+  conversationId String
+  direction      String
+  body           String
+  source         String   @default("whatsapp")
+  timestamp      DateTime @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id])
+}
+
+model AgentRun {
+  id             String   @id @default(cuid())
+  conversationId String
+  messageId      String?
+  status         String   @default("pending")
+  routerOutput   Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  conversation    Conversation     @relation(fields: [conversationId], references: [id])
+  recommendations Recommendation[]
+  approvalItems   ApprovalItem[]
+}
+
+model Recommendation {
+  id         String   @id @default(cuid())
+  agentRunId String
+  agentType  String
+  type       String
+  title      String
+  body       Json
+  priority   String   @default("normal")
+  createdAt  DateTime @default(now())
+
+  agentRun AgentRun @relation(fields: [agentRunId], references: [id])
+}
+
+model ApprovalItem {
+  id         String   @id @default(cuid())
+  agentRunId String
+  type       String
+  title      String
+  content    Json
+  status     String   @default("pending")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  agentRun AgentRun @relation(fields: [agentRunId], references: [id])
+}
+
+model Quote {
+  id           String   @id @default(cuid())
+  businessId   String
+  customerName String
+  items        Json
+  totalSgd     Float
+  notes        String?
+  status       String   @default("draft")
+  createdAt    DateTime @default(now())
+
+  business Business @relation(fields: [businessId], references: [id])
+}
+
+model Task {
+  id         String    @id @default(cuid())
+  businessId String
+  title      String
+  body       String?
+  assignee   String?
+  dueAt      DateTime?
+  status     String    @default("open")
+  createdAt  DateTime  @default(now())
+
+  business Business @relation(fields: [businessId], references: [id])
+}
+
+model MenuItem {
+  id         String  @id @default(cuid())
+  businessId String
+  name       String
+  category   String
+  priceSgd   Float
+  available  Boolean @default(true)
+
+  business Business @relation(fields: [businessId], references: [id])
+}
+
+model InventoryItem {
+  id           String   @id @default(cuid())
+  businessId   String
+  name         String
+  unit         String
+  quantity     Int
+  reorderLevel Int      @default(20)
+  updatedAt    DateTime @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id])
+}
+
+model StaffShift {
+  id         String  @id @default(cuid())
+  businessId String
+  staffName  String
+  role       String
+  date       String
+  startTime  String
+  endTime    String
+  available  Boolean @default(true)
+
+  business Business @relation(fields: [businessId], references: [id])
+}
+
+model Supplier {
+  id         String  @id @default(cuid())
+  businessId String
+  name       String
+  contact    String?
+  items      String
+  notes      String?
+
+  business Business @relation(fields: [businessId], references: [id])
+}
