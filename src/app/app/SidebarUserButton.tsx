@@ -1,8 +1,10 @@
 "use client";
-import { UserButton, useAuthData } from "@neondatabase/auth/react";
+import { UserButton } from "@neondatabase/auth/react";
+import { authClient } from "@/lib/auth/client";
 
 export default function SidebarUserButton() {
-  const { user } = useAuthData();
+  const { data: session } = authClient.useSession();
+  const user = session?.user;
 
   if (!user) return null;
 
