@@ -1,4 +1,5 @@
 import NavLinks from "./NavLinks";
+import SidebarUserButton from "./SidebarUserButton";
 import { Bot } from "lucide-react";
 
 export const metadata = {
@@ -17,16 +18,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </div>
             <div>
               <div className="text-sm font-bold text-white leading-tight">ServeOps AI</div>
-              <div className="text-xs text-slate-500 leading-tight">Kopi &amp; Bowl Cafe</div>
+              <div className="text-xs text-slate-500 leading-tight">AI Operating Team</div>
             </div>
           </div>
         </div>
 
         <NavLinks />
 
-        {/* Footer */}
-        <div className="px-4 py-3 border-t border-slate-800">
-          <div className="text-xs text-slate-600">AIT × Tencent Hackathon 2026</div>
+        {/* User + Footer */}
+        <div className="mt-auto border-t border-slate-800">
+          <SidebarUserButton />
+          <div className="px-4 py-2 border-t border-slate-800">
+            <div className="text-xs text-slate-600">AIT × Tencent Hackathon 2026</div>
+          </div>
         </div>
       </aside>
 

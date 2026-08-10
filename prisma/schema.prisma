@@ -8,6 +8,7 @@ datasource db {
 
 model Business {
   id          String   @id @default(cuid())
+  userId      String?  @unique
   name        String
   type        String
   waNumber    String?
