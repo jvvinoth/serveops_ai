@@ -3,9 +3,9 @@ import type { NextRequest } from "next/server";
 
 export default async function middleware(request: NextRequest) {
   const auth = createNeonAuth({
-    baseUrl: process.env.NEON_AUTH_URL!,
+    baseUrl: (process.env.NEON_AUTH_URL || process.env.NEON_AUTH_BASE_URL)!,
     cookies: {
-      secret: process.env.AUTH_COOKIE_SECRET!,
+      secret: (process.env.AUTH_COOKIE_SECRET || process.env.NEON_AUTH_COOKIE_SECRET)!,
     },
   });
 

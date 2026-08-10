@@ -5,8 +5,9 @@ let _neonAuth: ReturnType<typeof createNeonAuth> | null = null;
 
 function getNeonAuth() {
   if (!_neonAuth) {
-    const secret = process.env.AUTH_COOKIE_SECRET;
-    const baseUrl = process.env.NEON_AUTH_URL;
+    const secret = process.env.AUTH_COOKIE_SECRET || process.env.NEON_AUTH_COOKIE_SECRET;
+    // Support both NEON_AUTH_URL and the official NEON_AUTH_BASE_URL name
+    const baseUrl = process.env.NEON_AUTH_URL || process.env.NEON_AUTH_BASE_URL;
 
     if (!secret || !baseUrl) {
       // During build-time static analysis — return a no-op placeholder
