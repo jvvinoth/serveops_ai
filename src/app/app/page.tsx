@@ -13,44 +13,44 @@ interface Stats {
 
 const DEMO_SCENARIOS = [
   {
-    id: "catering",
-    label: "40-pax Catering Inquiry",
-    desc: "Corporate client asks for event package",
-    color: "text-blue-400",
+    id: "agency_project",
+    label: "Digital Agency — Full Project Inquiry",
+    desc: "New lead wants logo, website & ad campaign",
+    color: "text-indigo-400",
     phone: "+6591234567",
-    name: "David Tan",
+    name: "Amelia Tan",
     message:
-      "Hi, I'm David from Tech Corp Singapore. We need catering for 40 pax next Friday (15 Aug) for our company lunch. Looking for halal options, set lunch style. Can you provide a quote? Budget around $25-30 per person.",
+      "Hi, I found you on Instagram. I'm opening a new café next month and need a full branding package — logo, website, and a social media launch campaign. Can you share your packages and pricing? Looking to get started ASAP.",
   },
   {
-    id: "inventory",
-    label: "Low Inventory Trigger",
-    desc: "Customer order triggers restock ops",
-    color: "text-orange-400",
+    id: "catering_order",
+    label: "F&B Catering — Event Order",
+    desc: "Corporate client requests catering quote",
+    color: "text-blue-400",
     phone: "+6598765432",
-    name: "Sarah Lee",
+    name: "David Lim",
     message:
-      "Hey, do you still have Kopi-O today? Came last time and you were out. Planning to order 20 cups for my team tomorrow morning.",
+      "Hi, I'm David from TechCorp SG. We need catering for 50 pax on 20 Aug for our product launch dinner. Looking for a buffet set with halal options. What are your packages and can you confirm availability?",
   },
   {
-    id: "staff",
-    label: "Staff Scheduling Query",
-    desc: "Last-minute shift change request",
-    color: "text-purple-400",
+    id: "insurance_lead",
+    label: "Insurance — Policy Inquiry",
+    desc: "Prospect asks about life insurance options",
+    color: "text-teal-400",
     phone: "+6581234567",
-    name: "Ahmad Faris",
+    name: "Priya Nair",
     message:
-      "Hi, I'm one of your morning crew. Can I swap my shift on Tuesday to Thursday? My colleague Marcus is okay to cover me.",
+      "Hello, a friend recommended you. I'm 32 years old and looking to get my first life insurance policy. Not sure whether to go for term or whole life. Can you explain the difference and share some options that suit my budget of around $200/month?",
   },
   {
-    id: "marketing",
-    label: "Loyalty & Promotions",
-    desc: "Customer asks about loyalty program",
-    color: "text-pink-400",
+    id: "renovation_quote",
+    label: "Renovation — HDB Quote Request",
+    desc: "Homeowner asks for renovation package",
+    color: "text-amber-400",
     phone: "+6592345678",
-    name: "Jenny Wong",
+    name: "Jason Ong",
     message:
-      "Hello! I heard you have a new loyalty card program? Also any upcoming promotions for August? I bring my team here every week for breakfast.",
+      "Hi, just got my BTO keys! 4-room HDB at Tampines. Looking for a full renovation — living room, kitchen, 2 bedrooms and bathrooms. What's your typical package for this? When can we schedule a site visit?",
   },
 ];
 
@@ -150,7 +150,7 @@ export default function CommandCenter() {
         {
           label: "Active Agents",
           value: stats.activeAgents,
-          sub: "Sales · Ops · Admin · Call · Mktg",
+          sub: "Sales · Proposal · Invoice · Call · Admin · Mktg",
           icon: Users,
           color: "text-purple-400",
           ring: "ring-purple-500/20",
@@ -182,7 +182,7 @@ export default function CommandCenter() {
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-white">Command Center</h1>
         <p className="text-slate-400 text-sm mt-1">
-          Kopi &amp; Bowl Cafe · ServeOps AI Dashboard
+          ServeOps AI · Your AI Operating Team for Any SME
         </p>
       </div>
 
@@ -257,11 +257,12 @@ export default function CommandCenter() {
           <h2 className="font-semibold text-white mb-4">Agent Status</h2>
           <div className="space-y-3">
             {[
-              { label: "Sales Agent", desc: "Quote generation · upsell", color: "bg-blue-400" },
-              { label: "Ops Agent", desc: "Inventory · staff coordination", color: "bg-orange-400" },
-              { label: "Admin Agent", desc: "Task management · scheduling", color: "bg-purple-400" },
-              { label: "Call Agent", desc: "WhatsApp reply drafting", color: "bg-green-400" },
-              { label: "Marketing Agent", desc: "Promotions · loyalty", color: "bg-pink-400" },
+              { label: "Sales Agent", desc: "Lead qualification · quotes · WhatsApp replies", color: "bg-blue-400" },
+              { label: "Proposal Agent", desc: "Pitch decks · service proposals", color: "bg-indigo-400" },
+              { label: "Invoice Agent", desc: "Invoice drafts · payment terms", color: "bg-emerald-400" },
+              { label: "Call Agent", desc: "Call scripts · appointment slots", color: "bg-teal-400" },
+              { label: "Admin Agent", desc: "Follow-up tasks · calendar blocks", color: "bg-purple-400" },
+              { label: "Marketing Agent", desc: "Promos · review replies · broadcasts", color: "bg-pink-400" },
             ].map(({ label, desc, color }) => (
               <div key={label} className="flex items-center gap-3">
                 <div
@@ -306,7 +307,7 @@ export default function CommandCenter() {
             { label: "→", plain: true },
             { label: "Router Agent", color: "bg-green-900/50 border border-green-800 text-green-300" },
             { label: "→", plain: true },
-            { label: "5 Parallel Agents", color: "bg-blue-900/50 border border-blue-800 text-blue-300" },
+            { label: "6 Parallel Agents", color: "bg-blue-900/50 border border-blue-800 text-blue-300" },
             { label: "→", plain: true },
             { label: "Approval Queue", color: "bg-amber-900/50 border border-amber-800 text-amber-300" },
             { label: "→", plain: true },

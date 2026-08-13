@@ -14,6 +14,7 @@ export interface RouterOutput {
   estimatedValue: number;
   currency: string;
   summary: string;
+  customerType: string;
   missingInfo: string[];
   agents: string[];
   notes: string;
@@ -46,33 +47,21 @@ export async function runRouter(
 }
 
 export async function buildBusinessContext(businessId: string): Promise<string> {
-  const [menuItems, inventory, staffShifts, suppliers] = await Promise.all([
-    prisma.menuItem.findMany({ where: { businessId, available: true } }),
-    prisma.inventoryItem.findMany({ where: { businessId } }),
-    prisma.staffShift.findMany({ where: { businessId } }),
-    prisma.supplier.findMany({ where: { businessId } }),
-  ]);
+  const business = await prisma.business.findUnique({
+    where: { id: businessId },
+    select: { name: true, type: true, waNumber: true },
+  });
 
+  // Build a generic SME business profile that works for any industry
   return JSON.stringify(
     {
-      menu: menuItems.map((m) => ({ name: m.name, category: m.category, price: m.priceSgd })),
-      inventory: inventory.map((i) => ({
-        name: i.name,
-        qty: i.quantity,
-        unit: i.unit,
-        reorderAt: i.reorderLevel,
-      })),
-      staff: staffShifts.map((s) => ({
-        name: s.staffName,
-        role: s.role,
-        date: s.date,
-        available: s.available,
-      })),
-      suppliers: suppliers.map((s) => ({
-        name: s.name,
-        contact: s.contact,
-        items: s.items,
-      })),
+      businessName: business?.name ?? "ServeOps Demo Business",
+      businessType: business?.type ?? "service",
+      whatsappNumber: business?.waNumber ?? null,
+      currency: "SGD",
+      country: "Singapore",
+      timezone: "Asia/Singapore",
+      today: new Date().toISOString().split("T")[0],
     },
     null,
     2
@@ -81,7 +70,8 @@ export async function buildBusinessContext(businessId: string): Promise<string> 
 
 const AGENT_PROMPT_MAP: Record<string, string> = {
   sales: "sales-agent",
-  ops: "ops-agent",
+  proposal: "proposal-agent",
+  invoice: "invoice-agent",
   admin: "admin-agent",
   call: "call-agent",
   marketing: "marketing-agent",
