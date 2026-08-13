@@ -162,7 +162,7 @@ export default function ConnectPage() {
                 {[
                   "Open WhatsApp on your phone",
                   "Go to Settings → Linked Devices",
-                  "Tap "Link a Device"",
+                  'Tap "Link a Device"',
                   "Scan the QR code above",
                 ].map((step, i) => (
                   <li key={i} className="flex items-start gap-3 text-sm text-slate-300">
