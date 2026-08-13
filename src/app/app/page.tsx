@@ -283,7 +283,7 @@ export default function CommandCenter() {
             {[
               { label: "OpenRouter LLM", status: "connected", ok: true },
               { label: "Neon Database", status: "connected", ok: true },
-              { label: "WhatsApp (WAHA)", status: "see /connect", ok: false },
+              { label: "WhatsApp Business", status: "see /connect", ok: false },
             ].map(({ label, status, ok }) => (
               <div key={label} className="flex items-center justify-between text-xs">
                 <span className="text-slate-400">{label}</span>
