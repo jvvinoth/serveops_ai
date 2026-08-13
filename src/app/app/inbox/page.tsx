@@ -345,7 +345,7 @@ function InvoicePreview({ content }: { content: Record<string, unknown> }) {
           </tfoot>
         </table>
       </div>
-      {content.paymentInstructions && (
+      {!!content.paymentInstructions && (
         <div className="text-xs text-slate-500 mt-1.5 px-1">{String(content.paymentInstructions)}</div>
       )}
     </div>
