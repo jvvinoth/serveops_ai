@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { runFullPipeline } from "@/ai/pipeline";
+import { BusinessProfile, runFullPipeline } from "@/ai/pipeline";
 import { BUSINESS_ID } from "@/lib/utils";
 
 // POST /api/messages/inbound — receive WhatsApp or simulator message
@@ -8,6 +8,7 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const { phone, name, message, source = "whatsapp" } = body;
+    const businessProfile = body.businessProfile as BusinessProfile | undefined;
 
     if (!phone || !message) {
       return NextResponse.json({ error: "phone and message are required" }, { status: 400 });
@@ -51,7 +52,7 @@ export async function POST(req: NextRequest) {
     });
 
     // Kick off agent pipeline (non-blocking)
-    runFullPipeline(conversation.id, message, BUSINESS_ID).catch(console.error);
+    runFullPipeline(conversation.id, message, BUSINESS_ID, businessProfile).catch(console.error);
 
     return NextResponse.json({
       success: true,

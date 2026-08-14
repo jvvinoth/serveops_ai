@@ -26,6 +26,20 @@ type CustomerContext = {
   company?: string | null;
 };
 
+export type BusinessProfile = {
+  businessName?: string;
+  industry?: string;
+  offerSummary?: string;
+  paymentTerms?: string;
+  availability?: string;
+  tone?: string;
+  services?: Array<{
+    name: string;
+    priceSgd: number;
+    description?: string;
+  }>;
+};
+
 function addDays(days: number): string {
   const date = new Date();
   date.setDate(date.getDate() + days);
@@ -64,7 +78,29 @@ function parseJsonObject(raw: string): object {
   }
 }
 
-function estimateValueFromMessage(messageBody: string): number {
+function pickProfileService(messageBody: string, businessProfile?: BusinessProfile) {
+  const services = businessProfile?.services?.filter((service) => service.name && Number(service.priceSgd) > 0) ?? [];
+  if (!services.length) return null;
+
+  const lower = messageBody.toLowerCase();
+  const scored = services
+    .map((service) => {
+      const words = `${service.name} ${service.description ?? ""}`
+        .toLowerCase()
+        .split(/[^a-z0-9]+/)
+        .filter((word) => word.length > 2);
+      const score = words.reduce((count, word) => count + (lower.includes(word) ? 1 : 0), 0);
+      return { service, score };
+    })
+    .sort((a, b) => b.score - a.score);
+
+  return scored[0]?.score > 0 ? scored[0].service : services[0];
+}
+
+function estimateValueFromMessage(messageBody: string, businessProfile?: BusinessProfile): number {
+  const profileService = pickProfileService(messageBody, businessProfile);
+  if (profileService) return Number(profileService.priceSgd);
+
   const lower = messageBody.toLowerCase();
 
   if (/\btuition\b|\btrial class\b|\bprimary\b|\bmath\b|\bregistration\b|\bstudent\b|\bparent\b/.test(lower)) {
@@ -90,7 +126,41 @@ function estimateValueFromMessage(messageBody: string): number {
   return 1500;
 }
 
-function demoPackageForMessage(messageBody: string) {
+function demoPackageForMessage(messageBody: string, businessProfile?: BusinessProfile) {
+  const profileService = pickProfileService(messageBody, businessProfile);
+  if (profileService) {
+    const industry = businessProfile?.industry || "SME service";
+    const packageName = profileService.name;
+    const description = profileService.description || businessProfile?.offerSummary || `${packageName} for ${industry}`;
+
+    return {
+      packageName,
+      lineItem: `${packageName} - ${description}`,
+      titlePrefix: `${packageName} Proposal`,
+      solution: `We will handle the customer's request using ${packageName}, with clear scope, timing, price, and owner approval before anything is sent.`,
+      solutionBullets: [
+        `Match the customer request to ${packageName}`,
+        "Confirm timing, requirements, and fit",
+        "Prepare quote, proposal, invoice, call plan, and follow-up tasks",
+      ],
+      scopeBullets: [
+        description,
+        "Customer requirement clarification",
+        "Package pricing and payment terms",
+        "Owner approval before sending",
+        "WhatsApp reply draft",
+        "Follow-up task checklist",
+      ],
+      timelineBullets: [
+        "Step 1: confirm customer requirement and timing",
+        "Step 2: review package, pricing, and proposal",
+        "Step 3: approve invoice or next appointment",
+      ],
+      paymentTerms: businessProfile?.paymentTerms || "50% deposit upfront, balance before delivery",
+      upsell: `Offer a relevant add-on or recurring package for ${industry}.`,
+    };
+  }
+
   const lower = messageBody.toLowerCase();
 
   if (/\btuition\b|\btrial class\b|\bprimary\b|\bmath\b|\bregistration\b|\bstudent\b|\bparent\b/.test(lower)) {
@@ -193,13 +263,13 @@ function demoPackageForMessage(messageBody: string) {
   };
 }
 
-function fallbackRouterOutput(messageBody: string): RouterOutput {
+function fallbackRouterOutput(messageBody: string, businessProfile?: BusinessProfile): RouterOutput {
   const lower = messageBody.toLowerCase();
   const asksForPricing = /\bfee\b|\bfees\b|\bprice\b|\bpricing\b|\bcost\b|\bcosts\b|\brate\b|\brates\b|\bquote\b|\bestimate\b|\bpackage\b|\bpackages\b/.test(lower);
   const asksForInvoice = /\binvoice\b|\bbill\b|\bdeposit\b|\bpayment\b|\bpay\b|\bregistration\b|\bsign up\b|\benrol\b|\benroll\b|\bdecide to start\b/.test(lower);
   const asksForProposal = asksForPricing || /\bproposal\b|\bdeck\b|\bpitch\b|\bwebsite\b|\bcampaign\b|\blaunch\b|\btrial class\b|\btuition\b|\bsite visit\b|\bconsultation\b|\bbridal\b/.test(lower);
   const wantsCall = /\bcall\b|\bappointment\b|\bschedule\b|\bmeet\b|\bthis week\b|\btrial class\b|\bsite visit\b|\bconsultation\b/.test(lower);
-  const estimatedValue = estimateValueFromMessage(messageBody);
+  const estimatedValue = estimateValueFromMessage(messageBody, businessProfile);
 
   return {
     intent: asksForProposal ? "quote_request" : "service_inquiry",
@@ -224,8 +294,8 @@ function fallbackRouterOutput(messageBody: string): RouterOutput {
   };
 }
 
-function normalizeRouterOutput(routerOutput: RouterOutput, messageBody: string): RouterOutput {
-  const inferred = fallbackRouterOutput(messageBody);
+function normalizeRouterOutput(routerOutput: RouterOutput, messageBody: string, businessProfile?: BusinessProfile): RouterOutput {
+  const inferred = fallbackRouterOutput(messageBody, businessProfile);
   const estimatedValue = Number(routerOutput.estimatedValue ?? 0);
 
   return {
@@ -265,13 +335,15 @@ function fallbackAgentResult(
   type: string,
   messageBody: string,
   routerOutput: RouterOutput,
-  customer?: CustomerContext
+  customer?: CustomerContext,
+  businessProfile?: BusinessProfile
 ): Record<string, unknown> {
   const clientName = customer?.name || "Customer";
   const clientPhone = customer?.phone || "+65 demo";
   const clientBusiness = extractBusinessName(messageBody, customer);
   const need = extractCustomerNeed(messageBody);
-  const demoPackage = demoPackageForMessage(messageBody);
+  const demoPackage = demoPackageForMessage(messageBody, businessProfile);
+  const providerName = businessProfile?.businessName || "BrightLane Studio";
   const totalSgd = routerOutput.estimatedValue > 0 ? routerOutput.estimatedValue : 3200;
   const depositSgd = totalSgd / 2;
   const validUntil = addDays(7);
@@ -288,7 +360,7 @@ function fallbackAgentResult(
         requirement: need,
       },
       proposedBy: {
-        business: "BrightLane Studio",
+        business: providerName,
         contactName: "ServeOps AI Operating Team",
         date: addDays(0),
         validUntil,
@@ -297,10 +369,10 @@ function fallbackAgentResult(
         {
           slideNumber: 1,
           title: "About Us",
-          content: "BrightLane Studio helps local SMEs turn WhatsApp inquiries into launch-ready sales assets, campaigns, and payment workflows.",
+          content: `${providerName} uses ServeOps AI to turn WhatsApp inquiries into clear replies, proposals, invoices, call plans, and follow-up tasks.`,
           bullets: [
-            "SME-focused brand, web, and campaign execution",
-            "Fast turnaround for owner-led businesses",
+            businessProfile?.offerSummary || "SME-focused service delivery",
+            businessProfile?.industry ? `${businessProfile.industry} operating context` : "Works across SME industries",
             "Clear approval points before anything is sent",
           ],
         },
@@ -370,7 +442,7 @@ function fallbackAgentResult(
       issueDate: addDays(0),
       dueDate,
       billFrom: {
-        businessName: "BrightLane Studio",
+        businessName: providerName,
         address: "Singapore",
         email: "hello@brightlane.studio",
         phone: "+65 9000 0000",
@@ -413,7 +485,7 @@ function fallbackAgentResult(
         { date: addDays(3), time: "10:00", label: "Next available morning 10am" },
       ],
       script: {
-        opening: `Hi ${clientName}, this is BrightLane Studio. I saw your message about ${clientBusiness} and wanted to quickly understand what you need and the timing.`,
+        opening: `Hi ${clientName}, this is ${providerName}. I saw your message about ${clientBusiness} and wanted to quickly understand what you need and the timing.`,
         keyPoints: [
           "Confirm the exact requirement and preferred timing",
           `Walk through the ${demoPackage.packageName}`,
@@ -521,27 +593,34 @@ export async function runRouter(
   return parseJsonObject(raw) as RouterOutput;
 }
 
-export async function buildBusinessContext(businessId: string): Promise<string> {
+export async function buildBusinessContext(businessId: string, businessProfile?: BusinessProfile): Promise<string> {
   const business = await prisma.business.findUnique({
     where: { id: businessId },
     select: { name: true, type: true, waNumber: true },
   });
+  const businessName = businessProfile?.businessName?.trim() || "BrightLane Studio";
+  const businessType = businessProfile?.industry?.trim() || "SME design, marketing, and business services agency";
 
   // Build a generic SME business profile that works for any industry
   return JSON.stringify(
     {
-      businessName: "BrightLane Studio",
-      businessType: "SME design, marketing, and business services agency",
+      businessName,
+      businessType,
       actualTenantRecord: business?.name ?? "ServeOps Demo Business",
       whatsappNumber: business?.waNumber ?? null,
       currency: "SGD",
       country: "Singapore",
       timezone: "Asia/Singapore",
       today: new Date().toISOString().split("T")[0],
+      services: businessProfile?.services ?? [],
+      offerSummary: businessProfile?.offerSummary ?? null,
+      paymentTerms: businessProfile?.paymentTerms ?? "PayNow / bank transfer. Reference the invoice number when making payment.",
+      callAvailability: businessProfile?.availability ?? "Tomorrow 2:30pm or the next available weekday morning",
+      brandVoice: businessProfile?.tone ?? "warm, concise, professional",
       demoPositioning:
-        "BrightLane Studio helps local SMEs turn customer demand into websites, campaigns, proposals, invoices, and follow-up workflows.",
+        `${businessName} uses ServeOps AI to turn customer demand into replies, proposals, invoices, call plans, and follow-up workflows.`,
       paymentInstructions:
-        "PayNow / bank transfer. Reference the invoice number when making payment.",
+        businessProfile?.paymentTerms ?? "PayNow / bank transfer. Reference the invoice number when making payment.",
     },
     null,
     2
@@ -560,14 +639,15 @@ const AGENT_PROMPT_MAP: Record<string, string> = {
 export async function runFullPipeline(
   conversationId: string,
   messageBody: string,
-  businessId: string
+  businessId: string,
+  businessProfile?: BusinessProfile
 ): Promise<string> {
   const agentRun = await prisma.agentRun.create({
     data: { conversationId, status: "running" },
   });
 
   try {
-    const businessContext = await buildBusinessContext(businessId);
+    const businessContext = await buildBusinessContext(businessId, businessProfile);
     const conversation = await prisma.conversation.findUnique({
       where: { id: conversationId },
       include: { customer: true },
@@ -585,10 +665,10 @@ export async function runFullPipeline(
       routerOutput = await runRouter(messageBody, businessContext);
     } catch (error) {
       console.error("Router fallback used:", error);
-      routerOutput = fallbackRouterOutput(messageBody);
+      routerOutput = fallbackRouterOutput(messageBody, businessProfile);
     }
 
-    routerOutput = normalizeRouterOutput(routerOutput, messageBody);
+    routerOutput = normalizeRouterOutput(routerOutput, messageBody, businessProfile);
 
     await prisma.agentRun.update({
       where: { id: agentRun.id },
@@ -603,14 +683,14 @@ export async function runFullPipeline(
           return {
             type,
             result: await runAgent(AGENT_PROMPT_MAP[type], messageBody, businessContext, routerOutput).then((result) =>
-              hasWeakMoneyResult(type, result, routerOutput) ? fallbackAgentResult(type, messageBody, routerOutput, customer) : result
+              hasWeakMoneyResult(type, result, routerOutput) ? fallbackAgentResult(type, messageBody, routerOutput, customer, businessProfile) : result
             ),
           };
         } catch (error) {
           console.error(`${type} agent fallback used:`, error);
           return {
             type,
-            result: fallbackAgentResult(type, messageBody, routerOutput, customer),
+            result: fallbackAgentResult(type, messageBody, routerOutput, customer, businessProfile),
           };
         }
       })

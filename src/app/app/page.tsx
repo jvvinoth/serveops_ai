@@ -16,14 +16,18 @@ import {
   MoreVertical,
   Paperclip,
   Phone,
+  Plus,
   Play,
   Receipt,
   RefreshCw,
   Search,
   Send,
+  Settings,
   Sparkles,
   UserRound,
   Video,
+  Wand2,
+  X,
 } from "lucide-react";
 
 type Message = {
@@ -85,6 +89,20 @@ type ContactScenario = {
   expected: string[];
 };
 
+type BusinessProfile = {
+  businessName: string;
+  industry: string;
+  offerSummary: string;
+  paymentTerms: string;
+  availability: string;
+  tone: string;
+  services: Array<{ name: string; priceSgd: number; description?: string }>;
+};
+
+type BusinessProfileForm = Omit<BusinessProfile, "services"> & {
+  servicesText: string;
+};
+
 const CONTACTS: ContactScenario[] = [
   {
     id: "agency_project",
@@ -136,6 +154,29 @@ const CONTACTS: ContactScenario[] = [
   },
 ];
 
+const DEFAULT_BUSINESS_FORM: BusinessProfileForm = {
+  businessName: "Happy Minds Tuition Centre",
+  industry: "Tuition / Education",
+  offerSummary: "Primary and secondary tuition with trial classes, parent updates, and registration support.",
+  paymentTerms: "PayNow / bank transfer. Registration fee upfront, monthly fee before first class.",
+  availability: "Saturday 10am, Sunday 2pm, or next weekday 7pm",
+  tone: "warm, parent-friendly, professional",
+  servicesText: [
+    "Primary 6 Math Trial Class | 80 | 1 trial class with diagnostic review",
+    "Primary 6 Math Monthly Package | 480 | Weekly classes, progress notes, and parent follow-up",
+    "Registration Fee | 120 | Student onboarding and materials",
+  ].join("\n"),
+};
+
+const DEFAULT_CUSTOM_SCENARIO = {
+  name: "Priya Nair",
+  company: "Custom WhatsApp lead",
+  phone: "+6597001099",
+  segment: "Custom scenario",
+  message:
+    "Hi, I need weekly Primary 6 Math tuition for my daughter. Can you share the monthly fees, arrange a trial class this weekend, and send registration invoice if we confirm?",
+};
+
 const AGENT_LABELS: Record<string, { label: string; icon: typeof Bot; color: string }> = {
   sales: { label: "Sales Agent", icon: MessageCircle, color: "text-blue-300 bg-blue-500/10 border-blue-500/20" },
   proposal: { label: "Proposal Agent", icon: Briefcase, color: "text-indigo-300 bg-indigo-500/10 border-indigo-500/20" },
@@ -172,6 +213,170 @@ function itemKind(type: string) {
   if (type === "invoice") return "invoice";
   if (type === "tasks") return "tasks";
   return "other";
+}
+
+function parseServices(text: string): BusinessProfile["services"] {
+  return text
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const [name = "", price = "0", description = ""] = line.split("|").map((part) => part.trim());
+      return { name, priceSgd: Number(price.replace(/[^0-9.]/g, "")), description };
+    })
+    .filter((service) => service.name && service.priceSgd > 0);
+}
+
+function buildBusinessProfile(form: BusinessProfileForm): BusinessProfile {
+  return {
+    businessName: form.businessName,
+    industry: form.industry,
+    offerSummary: form.offerSummary,
+    paymentTerms: form.paymentTerms,
+    availability: form.availability,
+    tone: form.tone,
+    services: parseServices(form.servicesText),
+  };
+}
+
+function Field({
+  label,
+  value,
+  onChange,
+  placeholder,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+}) {
+  return (
+    <label className="block">
+      <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">{label}</span>
+      <input
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        placeholder={placeholder}
+        className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-white outline-none placeholder:text-slate-600 focus:border-emerald-500/60"
+      />
+    </label>
+  );
+}
+
+function BusinessSetupPanel({
+  form,
+  setForm,
+  profile,
+}: {
+  form: BusinessProfileForm;
+  setForm: (next: BusinessProfileForm) => void;
+  profile: BusinessProfile;
+}) {
+  function update<K extends keyof BusinessProfileForm>(key: K, value: BusinessProfileForm[K]) {
+    setForm({ ...form, [key]: value });
+  }
+
+  return (
+    <section className="rounded-2xl border border-slate-800 bg-slate-900 p-5">
+      <div className="mb-4 flex items-start justify-between gap-3">
+        <div>
+          <div className="mb-1 flex items-center gap-2 text-[11px] font-bold uppercase tracking-wide text-emerald-300">
+            <Settings className="h-3.5 w-3.5" />
+            Business setup
+          </div>
+          <h2 className="text-base font-bold text-white">Test any SME business</h2>
+          <p className="mt-1 text-xs leading-relaxed text-slate-500">
+            The WhatsApp message is interpreted against this profile and service catalog.
+          </p>
+        </div>
+        <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-3 py-2 text-right">
+          <div className="text-lg font-bold text-emerald-200">{profile.services.length}</div>
+          <div className="text-[10px] uppercase tracking-wide text-emerald-300/80">priced services</div>
+        </div>
+      </div>
+
+      <div className="grid gap-3 md:grid-cols-2">
+        <Field label="Business name" value={form.businessName} onChange={(value) => update("businessName", value)} />
+        <Field label="Industry" value={form.industry} onChange={(value) => update("industry", value)} />
+        <Field label="Payment terms" value={form.paymentTerms} onChange={(value) => update("paymentTerms", value)} />
+        <Field label="Call availability" value={form.availability} onChange={(value) => update("availability", value)} />
+      </div>
+
+      <label className="mt-3 block">
+        <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">Offer summary</span>
+        <textarea
+          value={form.offerSummary}
+          onChange={(event) => update("offerSummary", event.target.value)}
+          rows={2}
+          className="w-full resize-none rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-sm leading-relaxed text-white outline-none placeholder:text-slate-600 focus:border-emerald-500/60"
+        />
+      </label>
+
+      <label className="mt-3 block">
+        <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">Services and pricing</span>
+        <textarea
+          value={form.servicesText}
+          onChange={(event) => update("servicesText", event.target.value)}
+          rows={4}
+          className="w-full resize-none rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 font-mono text-xs leading-relaxed text-white outline-none placeholder:text-slate-600 focus:border-emerald-500/60"
+        />
+        <span className="mt-1 block text-[11px] text-slate-600">Format: Service name | SGD price | short description</span>
+      </label>
+    </section>
+  );
+}
+
+function CustomScenarioPanel({
+  value,
+  onChange,
+  onUse,
+}: {
+  value: typeof DEFAULT_CUSTOM_SCENARIO;
+  onChange: (next: typeof DEFAULT_CUSTOM_SCENARIO) => void;
+  onUse: () => void;
+}) {
+  function update<K extends keyof typeof DEFAULT_CUSTOM_SCENARIO>(key: K, nextValue: (typeof DEFAULT_CUSTOM_SCENARIO)[K]) {
+    onChange({ ...value, [key]: nextValue });
+  }
+
+  return (
+    <section className="rounded-2xl border border-slate-800 bg-slate-900 p-5">
+      <div className="mb-4 flex items-start justify-between gap-3">
+        <div>
+          <div className="mb-1 flex items-center gap-2 text-[11px] font-bold uppercase tracking-wide text-cyan-300">
+            <Wand2 className="h-3.5 w-3.5" />
+            Custom scenario
+          </div>
+          <h2 className="text-base font-bold text-white">Send any customer message</h2>
+          <p className="mt-1 text-xs leading-relaxed text-slate-500">
+            Use this when judges want to test a scenario outside the preset contacts.
+          </p>
+        </div>
+        <button
+          onClick={onUse}
+          className="flex items-center gap-2 rounded-xl bg-cyan-600 px-3 py-2 text-xs font-bold text-white hover:bg-cyan-500"
+        >
+          <Plus className="h-4 w-4" />
+          Use in phone
+        </button>
+      </div>
+
+      <div className="grid gap-3 md:grid-cols-3">
+        <Field label="Customer" value={value.name} onChange={(next) => update("name", next)} />
+        <Field label="Context" value={value.company} onChange={(next) => update("company", next)} />
+        <Field label="Phone" value={value.phone} onChange={(next) => update("phone", next)} />
+      </div>
+      <label className="mt-3 block">
+        <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">WhatsApp message</span>
+        <textarea
+          value={value.message}
+          onChange={(event) => update("message", event.target.value)}
+          rows={3}
+          className="w-full resize-none rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-sm leading-relaxed text-white outline-none placeholder:text-slate-600 focus:border-cyan-500/60"
+        />
+      </label>
+    </section>
+  );
 }
 
 function PipelineStep({
@@ -508,7 +713,13 @@ function RouterPanel({ run }: { run: AgentRun | null }) {
   );
 }
 
-function DeliverableCard({ item }: { item: ApprovalItem }) {
+function DeliverableCard({
+  item,
+  onSimulateCall,
+}: {
+  item: ApprovalItem;
+  onSimulateCall?: (item: ApprovalItem) => void;
+}) {
   const kind = itemKind(item.type);
   const content = item.content ?? {};
   const slides = asArray<{ title?: string; bullets?: string[]; slideNumber?: number }>(content.slides);
@@ -589,6 +800,13 @@ function DeliverableCard({ item }: { item: ApprovalItem }) {
               ))}
             </div>
           ) : null}
+          <button
+            onClick={() => onSimulateCall?.(item)}
+            className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-white px-3 py-2 text-xs font-bold text-slate-950 hover:bg-slate-200"
+          >
+            <Phone className="h-3.5 w-3.5" />
+            Simulate Call Agent
+          </button>
         </div>
       )}
 
@@ -674,7 +892,125 @@ function DeliverableCard({ item }: { item: ApprovalItem }) {
   );
 }
 
-function DeliverablesPanel({ run }: { run: AgentRun | null }) {
+function CallSimulationModal({
+  item,
+  selected,
+  profile,
+  onClose,
+}: {
+  item: ApprovalItem;
+  selected: ContactScenario;
+  profile: BusinessProfile;
+  onClose: () => void;
+}) {
+  const [step, setStep] = useState(0);
+  const content = item.content ?? {};
+  const callScript = content.script as { opening?: string; keyPoints?: string[]; closing?: string } | undefined;
+  const slots = asArray<{ label?: string; date?: string; time?: string }>(content.suggestedAppointmentSlots);
+  const chosenSlot = slots[0]?.label || `${slots[0]?.date ?? "Tomorrow"} ${slots[0]?.time ?? "14:30"}`;
+  const transcript = [
+    { speaker: "AI Call Agent", text: callScript?.opening || `Hi ${selected.name}, this is ${profile.businessName}. I saw your WhatsApp message and wanted to help confirm the details.` },
+    { speaker: selected.name, text: "Yes, thanks for calling. I wanted to understand the package and next step." },
+    { speaker: "AI Call Agent", text: `Great. I can walk you through ${profile.services[0]?.name || "the recommended package"} and confirm if ${chosenSlot} works.` },
+    { speaker: selected.name, text: "That works. Please reserve the slot and send the details on WhatsApp." },
+    { speaker: "AI Call Agent", text: callScript?.closing || "Perfect, I will send the proposal, invoice, and confirmation to WhatsApp for review." },
+  ];
+
+  useEffect(() => {
+    setStep(0);
+    const interval = setInterval(() => {
+      setStep((current) => (current >= transcript.length ? current : current + 1));
+    }, 900);
+    return () => clearInterval(interval);
+  }, [item.id, transcript.length]);
+
+  const complete = step >= transcript.length;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
+      <section className="w-full max-w-3xl overflow-hidden rounded-3xl border border-slate-700 bg-slate-950 text-white shadow-2xl">
+        <header className="flex items-center justify-between border-b border-slate-800 bg-slate-900 px-5 py-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-cyan-500/15 text-cyan-200">
+              <Phone className="h-5 w-5" />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold">Call Agent Simulation</h2>
+              <p className="text-xs text-slate-500">{profile.businessName} calling {selected.name}</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="rounded-full border border-slate-700 p-2 text-slate-400 hover:text-white">
+            <X className="h-4 w-4" />
+          </button>
+        </header>
+
+        <div className="grid gap-5 p-5 md:grid-cols-[260px_minmax(0,1fr)]">
+          <div className="rounded-[2.2rem] border border-slate-700 bg-black p-3">
+            <div className="rounded-[1.8rem] bg-[#101820] px-5 py-8 text-center">
+              <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-cyan-500 to-emerald-500 text-2xl font-bold">
+                {selected.avatar}
+              </div>
+              <div className="text-xl font-bold">{selected.name}</div>
+              <div className="mt-1 text-xs text-slate-400">{selected.phone}</div>
+              <div className="mt-6 rounded-full bg-cyan-500/10 px-3 py-2 text-sm font-semibold text-cyan-200">
+                {complete ? "Call completed" : "On call..."}
+              </div>
+              <div className="mt-6 flex justify-center gap-1.5">
+                {[0, 1, 2, 3, 4].map((bar) => (
+                  <span
+                    key={bar}
+                    className={`h-12 w-2 rounded-full bg-cyan-300 ${!complete ? "animate-pulse" : "opacity-40"}`}
+                    style={{ animationDelay: `${bar * 120}ms` }}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div className="mb-3 rounded-2xl border border-slate-800 bg-slate-900 p-4">
+              <div className="text-[11px] font-bold uppercase tracking-wide text-slate-500">Call goal</div>
+              <p className="mt-1 text-sm leading-relaxed text-slate-300">
+                {String(content.reason ?? "Confirm customer requirement, answer key questions, and reserve the next appointment or payment step.")}
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              {transcript.slice(0, Math.max(1, step)).map((line, index) => (
+                <div key={`${line.speaker}-${index}`} className="rounded-2xl border border-slate-800 bg-slate-900 p-4">
+                  <div className={`mb-1 text-xs font-bold ${line.speaker === "AI Call Agent" ? "text-cyan-300" : "text-emerald-300"}`}>
+                    {line.speaker}
+                  </div>
+                  <p className="text-sm leading-relaxed text-slate-200">{line.text}</p>
+                </div>
+              ))}
+            </div>
+
+            {complete && (
+              <div className="mt-4 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-4">
+                <div className="flex items-center gap-2 text-sm font-bold text-emerald-200">
+                  <CheckCircle2 className="h-4 w-4" />
+                  Appointment outcome created
+                </div>
+                <p className="mt-1 text-xs leading-relaxed text-emerald-100/80">
+                  Slot reserved: {chosenSlot}. Owner should approve the generated invoice/proposal before sending final confirmation.
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function DeliverablesPanel({
+  run,
+  onSimulateCall,
+}: {
+  run: AgentRun | null;
+  onSimulateCall: (item: ApprovalItem) => void;
+}) {
   const items = run?.approvalItems ?? [];
 
   return (
@@ -695,7 +1031,7 @@ function DeliverablesPanel({ run }: { run: AgentRun | null }) {
       {items.length ? (
         <div className="grid gap-3 xl:grid-cols-2">
           {items.map((item) => (
-            <DeliverableCard key={item.id} item={item} />
+            <DeliverableCard key={item.id} item={item} onSimulateCall={onSimulateCall} />
           ))}
         </div>
       ) : (
@@ -710,7 +1046,8 @@ function DeliverablesPanel({ run }: { run: AgentRun | null }) {
 }
 
 export default function LiveSimulatorPage() {
-  const [contacts] = useState(CONTACTS);
+  const [businessForm, setBusinessForm] = useState<BusinessProfileForm>(DEFAULT_BUSINESS_FORM);
+  const [customScenario, setCustomScenario] = useState(DEFAULT_CUSTOM_SCENARIO);
   const [selected, setSelected] = useState(CONTACTS[0]);
   const [draft, setDraft] = useState(CONTACTS[0].message);
   const [sending, setSending] = useState(false);
@@ -719,8 +1056,27 @@ export default function LiveSimulatorPage() {
   const [conversations, setConversations] = useState<ConversationSummary[]>([]);
   const [resetting, setResetting] = useState(false);
   const [notice, setNotice] = useState("");
+  const [callItem, setCallItem] = useState<ApprovalItem | null>(null);
 
   const latestRun = getLatestRun(detail);
+  const businessProfile = useMemo(() => buildBusinessProfile(businessForm), [businessForm]);
+  const customContact = useMemo<ContactScenario>(() => ({
+    id: "custom_scenario",
+    name: customScenario.name || "Custom Lead",
+    company: customScenario.company || "Custom WhatsApp lead",
+    phone: customScenario.phone || "+6597001099",
+    avatar: (customScenario.name || "CL")
+      .split(" ")
+      .map((part) => part[0])
+      .join("")
+      .slice(0, 2)
+      .toUpperCase(),
+    segment: customScenario.segment || "Custom scenario",
+    preview: customScenario.message.slice(0, 90),
+    message: customScenario.message,
+    expected: ["reply", "call_script", "proposal", "invoice", "tasks"],
+  }), [customScenario]);
+  const contacts = useMemo(() => [...CONTACTS, customContact], [customContact]);
 
   const selectedConversation = useMemo(
     () => conversations.find((conversation) => conversation.customer.phone === selected.phone),
@@ -780,6 +1136,7 @@ export default function LiveSimulatorPage() {
           name: selected.name,
           message: messageToSend,
           source: "simulator",
+          businessProfile,
         }),
       });
       if (!res.ok) throw new Error("Failed to send");
@@ -804,6 +1161,7 @@ export default function LiveSimulatorPage() {
         setConversationId(null);
         setDetail(null);
         setConversations([]);
+        setCallItem(null);
         setNotice("Simulator reset. Pick a contact and send a fresh message.");
       }
     } finally {
@@ -871,6 +1229,19 @@ export default function LiveSimulatorPage() {
           </div>
 
           <div data-testid="agent-scroll-panel" className="space-y-5 lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto lg:pr-2">
+            <BusinessSetupPanel form={businessForm} setForm={setBusinessForm} profile={businessProfile} />
+            <CustomScenarioPanel
+              value={customScenario}
+              onChange={setCustomScenario}
+              onUse={() => {
+                setSelected(customContact);
+                setConversationId(null);
+                setDetail(null);
+                setDraft(customContact.message);
+                setNotice("Custom scenario loaded into the WhatsApp simulator.");
+              }}
+            />
+
             <section className="grid gap-3 md:grid-cols-4">
               {[
                 { label: "Active customer", value: selected.name, sub: selected.company, icon: UserRound },
@@ -890,10 +1261,18 @@ export default function LiveSimulatorPage() {
             </section>
 
             <RouterPanel run={latestRun} />
-            <DeliverablesPanel run={latestRun} />
+            <DeliverablesPanel run={latestRun} onSimulateCall={setCallItem} />
           </div>
         </div>
       </div>
+      {callItem && (
+        <CallSimulationModal
+          item={callItem}
+          selected={selected}
+          profile={businessProfile}
+          onClose={() => setCallItem(null)}
+        />
+      )}
     </main>
   );
 }
