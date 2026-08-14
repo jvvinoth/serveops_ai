@@ -5,7 +5,7 @@ import {
   CheckCircle,
   ArrowRight,
   TrendingUp,
-  Package,
+  Briefcase,
   Calendar,
   Megaphone,
   Phone,
@@ -13,49 +13,57 @@ import {
   Shield,
   Clock,
   DollarSign,
+  Receipt,
 } from "lucide-react";
 
 export const metadata = {
-  title: "ServeOps AI — AI Operating Team for SMEs",
+  title: "ServeOps AI — AI Operating Team for Any SME",
   description:
-    "Turns WhatsApp orders into quotes, tasks, stock alerts, and owner-approved business actions. Built for F&B, tuition, clinics, and any business that runs on WhatsApp.",
+    "ServeOps AI turns WhatsApp messages into quotes, proposals, invoices, and owner-approved actions. Built for any SME — agencies, F&B, insurance, renovation, tuition, salons.",
 };
 
 const AGENTS = [
   {
     name: "Sales Agent",
-    desc: "Detects leads, extracts order details, drafts quotes and customer replies.",
+    desc: "Qualifies leads, extracts requirements, and drafts quotes and WhatsApp replies.",
     icon: DollarSign,
     color: "text-blue-400 bg-blue-500/10 border-blue-500/20",
     tag: "Revenue",
   },
   {
-    name: "Ops Agent",
-    desc: "Checks inventory, flags stockout risks, reviews staff/prep capacity.",
-    icon: Package,
-    color: "text-orange-400 bg-orange-500/10 border-orange-500/20",
-    tag: "Operations",
+    name: "Proposal Agent",
+    desc: "Generates a full 6-slide pitch deck or service proposal ready to share with clients.",
+    icon: Briefcase,
+    color: "text-indigo-400 bg-indigo-500/10 border-indigo-500/20",
+    tag: "Pitch",
+  },
+  {
+    name: "Invoice Agent",
+    desc: "Drafts professional invoices with line items, deposit amount, and payment terms.",
+    icon: Receipt,
+    color: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
+    tag: "Finance",
+  },
+  {
+    name: "Call Agent",
+    desc: "Writes step-by-step call scripts and recommends follow-up appointment slots.",
+    icon: Phone,
+    color: "text-teal-400 bg-teal-500/10 border-teal-500/20",
+    tag: "Follow-up",
   },
   {
     name: "Admin Agent",
-    desc: "Creates task lists, staff reminders, and calendar entries automatically.",
+    desc: "Creates tasks, follow-up reminders, and calendar blocks for the owner and team.",
     icon: Calendar,
     color: "text-purple-400 bg-purple-500/10 border-purple-500/20",
     tag: "Admin",
   },
   {
     name: "Marketing Agent",
-    desc: "Drafts promos, review replies, and WhatsApp broadcast copy.",
+    desc: "Drafts promos, review responses, and WhatsApp broadcast messages.",
     icon: Megaphone,
     color: "text-pink-400 bg-pink-500/10 border-pink-500/20",
     tag: "Growth",
-  },
-  {
-    name: "Call Agent",
-    desc: "Recommends follow-up calls and generates step-by-step call scripts.",
-    icon: Phone,
-    color: "text-green-400 bg-green-500/10 border-green-500/20",
-    tag: "Follow-up",
   },
 ];
 
@@ -63,28 +71,28 @@ const DEMO_STEPS = [
   {
     num: "01",
     title: "Message Arrives",
-    body: "\"Can you cater lunch for 40 pax this Friday at our office?\"",
+    body: "\"Hi, I need a full branding package — logo, website, and social campaign for my café opening next month.\"",
     label: "WhatsApp Inbound",
     color: "border-slate-600 text-slate-400",
   },
   {
     num: "02",
     title: "AI Router Classifies",
-    body: "Intent: catering_inquiry · Urgency: high · Est. Value: SGD 480 · Missing: delivery time, dietary split",
+    body: "Intent: service_inquiry · Urgency: high · Est. Value: SGD 4,500 · Missing: timeline, budget",
     label: "Router Agent",
     color: "border-emerald-600 text-emerald-400",
   },
   {
     num: "03",
-    title: "Agents Work in Parallel",
-    body: "Sales drafts quote · Ops checks chicken stock & Friday staff · Admin creates prep tasks · Call Agent writes confirmation script",
-    label: "5 Agents",
+    title: "6 Agents Work in Parallel",
+    body: "Sales drafts quote · Proposal Agent builds pitch deck · Call Agent writes appointment script · Admin creates follow-up tasks",
+    label: "6 Agents",
     color: "border-blue-600 text-blue-400",
   },
   {
     num: "04",
     title: "Owner Approves",
-    body: "Dashboard shows quote, stock alert, task list, and call script. Owner taps Approve — reply sent.",
+    body: "Dashboard shows quote, proposal deck, call script, and tasks. Owner taps Approve — reply and proposal sent instantly.",
     label: "Approval Queue",
     color: "border-purple-600 text-purple-400",
   },
@@ -92,26 +100,26 @@ const DEMO_STEPS = [
 
 const PAIN_POINTS = [
   "Customer inquiries get missed or replied hours late",
-  "Quotes are slow — typed manually each time",
-  "Stock and staffing problems appear only after confirming",
-  "Follow-ups are forgotten and leads are lost",
-  "Owners do sales, admin, ops, and marketing manually",
+  "Quotes and proposals are typed manually every single time",
+  "Leads go cold because follow-ups are forgotten",
+  "Owners spend hours on admin instead of growing the business",
+  "No professional proposal = lost deals to bigger competitors",
 ];
 
 const VERTICALS = [
-  { name: "F&B", desc: "Cafes, restaurants, catering, hawker brands", active: true },
+  { name: "Digital Agency", desc: "Proposals, quotes, project kick-offs", active: true },
+  { name: "F&B / Catering", desc: "Event quotes, menus, order follow-up", active: true },
+  { name: "Insurance", desc: "Policy inquiries, pitch decks, appointments", active: true },
+  { name: "Renovation", desc: "Quote requests, site visits, milestones", active: true },
   { name: "Tuition", desc: "Class bookings, parent follow-ups, schedules", active: false },
-  { name: "Salons", desc: "Appointment bookings, retail promos, reminders", active: false },
-  { name: "Clinics", desc: "Appointment triage, referrals, patient follow-up", active: false },
-  { name: "Renovation", desc: "Quote requests, supplier coordination, milestones", active: false },
-  { name: "Retail", desc: "Product inquiries, stock checks, order follow-up", active: false },
+  { name: "Salons", desc: "Appointments, packages, promos", active: false },
 ];
 
 const IMPACT = [
-  { icon: Clock, stat: "Minutes", label: "First response time", sub: "Down from hours" },
-  { icon: TrendingUp, stat: "70%", label: "Faster quote prep", sub: "Compared to manual" },
+  { icon: Clock, stat: "< 2 min", label: "First response time", sub: "Down from hours" },
+  { icon: TrendingUp, stat: "80%", label: "Faster quote & proposal prep", sub: "Compared to manual" },
   { icon: CheckCircle, stat: "0", label: "Missed follow-ups", sub: "Every lead tracked" },
-  { icon: Zap, stat: "5", label: "AI agents per message", sub: "Working in parallel" },
+  { icon: Zap, stat: "6", label: "AI agents per message", sub: "Working in parallel" },
 ];
 
 export default function Home() {
@@ -150,15 +158,15 @@ export default function Home() {
         <h1 className="text-5xl md:text-7xl font-bold leading-[1.08] mb-6 tracking-tight">
           AI Operating Team
           <br />
-          <span className="text-emerald-400">for SMEs</span>
+          <span className="text-emerald-400">for Any SME</span>
         </h1>
 
         <p className="text-xl text-slate-300 mb-3 max-w-2xl mx-auto leading-relaxed">
-          ServeOps AI turns WhatsApp customer messages into quotes, tasks,
-          stock alerts, and owner-approved business actions.
+          ServeOps AI turns WhatsApp customer messages into quotes, proposals,
+          invoices, call scripts, and owner-approved business actions — in seconds.
         </p>
         <p className="text-slate-500 mb-12 text-sm">
-          Built for F&amp;B, tuition, clinics, salons, and any business that runs on WhatsApp.
+          Works for agencies, F&amp;B, insurance, renovation, tuition, salons — any SME that runs on WhatsApp.
         </p>
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
@@ -189,37 +197,36 @@ export default function Home() {
               <div className="flex-1 text-center text-xs text-slate-500">serveops.ai/app/inbox</div>
             </div>
             {/* mock content */}
-            <div className="p-5 grid grid-cols-5 gap-4 text-left min-h-[180px]">
+            <div className="p-5 grid grid-cols-5 gap-4 text-left min-h-[200px]">
               {/* message bubble */}
               <div className="col-span-2 space-y-2">
                 <div className="text-xs text-slate-500 font-medium mb-1">Inbox</div>
                 <div className="bg-slate-800 rounded-lg p-2.5 border border-slate-700 border-l-2 border-l-emerald-500">
-                  <div className="text-xs font-medium text-white">David Tan · Tech Corp SG</div>
+                  <div className="text-xs font-medium text-white">Amelia Tan · New Lead</div>
                   <div className="text-xs text-slate-400 mt-0.5 line-clamp-2">
-                    Can you cater lunch for 40 pax this Friday?
+                    Hi, I need branding + website + social campaign for my café opening next month
                   </div>
                   <div className="flex gap-1 mt-1.5">
                     <span className="text-xs bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded-full border border-amber-500/30">HIGH</span>
-                    <span className="text-xs bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded-full border border-emerald-500/30">SGD 480</span>
+                    <span className="text-xs bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded-full border border-emerald-500/30">SGD 4,500</span>
                   </div>
                 </div>
               </div>
               {/* agent cards */}
-              <div className="col-span-3 space-y-2">
-                <div className="text-xs text-slate-500 font-medium mb-1">AI Analysis — 4 actions pending</div>
+              <div className="col-span-3 space-y-1.5">
+                <div className="text-xs text-slate-500 font-medium mb-1">AI Analysis — 5 actions pending</div>
                 {[
-                  { type: "quote", label: "Sales Agent", text: "Quote ready: SGD 480 for 40 lunch sets", color: "border-blue-700 bg-blue-950/40" },
-                  { type: "ops", label: "Ops Agent", text: "Stock OK · Needs 1 extra staff Friday", color: "border-orange-700 bg-orange-950/40" },
-                  { type: "call", label: "Call Agent", text: "Call script: confirm delivery time + dietary split", color: "border-green-700 bg-green-950/40" },
+                  { label: "Sales Agent", text: "Quote ready: SGD 4,500 · Branding + Web + Campaign", color: "border-blue-700 bg-blue-950/40" },
+                  { label: "Proposal Agent", text: "6-slide pitch deck drafted — ready to send", color: "border-indigo-700 bg-indigo-950/40" },
+                  { label: "Call Agent", text: "Call script ready · Slots: Tomorrow 10am or Fri 2pm", color: "border-teal-700 bg-teal-950/40" },
+                  { label: "Invoice Agent", text: "Invoice draft: SGD 4,500 · Deposit SGD 2,250", color: "border-emerald-700 bg-emerald-950/40" },
                 ].map((c) => (
-                  <div key={c.type} className={`rounded-lg border p-2 text-xs flex items-center gap-2 ${c.color}`}>
+                  <div key={c.label} className={`rounded-lg border p-2 text-xs flex items-center gap-2 ${c.color}`}>
                     <div className="flex-1">
                       <span className="text-slate-400">{c.label}: </span>
                       <span className="text-slate-200">{c.text}</span>
                     </div>
-                    <div className="flex gap-1 flex-shrink-0">
-                      <span className="bg-emerald-700/80 text-white px-2 py-0.5 rounded text-xs font-medium">Approve</span>
-                    </div>
+                    <span className="bg-emerald-700/80 text-white px-2 py-0.5 rounded text-xs font-medium flex-shrink-0">Approve</span>
                   </div>
                 ))}
               </div>
@@ -240,9 +247,9 @@ export default function Home() {
               <span className="text-slate-400">WhatsApp wasn&apos;t built for that.</span>
             </h2>
             <p className="text-slate-400 mb-6 leading-relaxed">
-              F&amp;B owners manage customer orders, catering inquiries, supplier
-              coordination, staffing, reviews, and promotions — all through WhatsApp
-              and spreadsheets. Important work gets missed every day.
+              Whether you run a digital agency, insurance practice, catering business,
+              or renovation firm — every inquiry arrives on WhatsApp and gets handled
+              manually. Proposals get delayed. Follow-ups get missed. Deals are lost.
             </p>
             <ul className="space-y-3">
               {PAIN_POINTS.map((p) => (
@@ -260,10 +267,10 @@ export default function Home() {
             <div className="bg-slate-900 rounded-2xl border border-slate-800 p-5">
               <div className="text-xs text-slate-500 mb-3 font-medium">Owner&apos;s typical morning — WhatsApp</div>
               {[
-                { from: "David Tan", msg: "Can you cater 40 pax Friday?", time: "8:02 AM", unread: true },
-                { from: "Supplier Lim", msg: "Chicken delivery delayed to tomorrow", time: "8:14 AM", unread: true },
-                { from: "Jane (staff)", msg: "I can't make Friday morning shift", time: "8:31 AM", unread: true },
-                { from: "Google Review", msg: "New 3-star review — no response yet", time: "9:05 AM", unread: true },
+                { from: "Amelia Tan", msg: "Hi, need branding + website for my café launch", time: "8:02 AM", unread: true },
+                { from: "Priya Nair", msg: "Can you explain term vs whole life policy?", time: "8:21 AM", unread: true },
+                { from: "David Lim", msg: "Need catering for 50 pax on 20 Aug", time: "8:45 AM", unread: true },
+                { from: "Jason Ong", msg: "Just got BTO keys — need full reno quote", time: "9:10 AM", unread: true },
               ].map((m) => (
                 <div key={m.from} className="flex items-start gap-3 py-2.5 border-b border-slate-800 last:border-0">
                   <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-xs font-bold flex-shrink-0 text-slate-300">
@@ -279,7 +286,7 @@ export default function Home() {
                   {m.unread && <div className="w-2 h-2 rounded-full bg-emerald-400 flex-shrink-0 mt-1" />}
                 </div>
               ))}
-              <div className="mt-3 text-center text-xs text-slate-600">+ 12 more unread</div>
+              <div className="mt-3 text-center text-xs text-slate-600">+ 9 more unread</div>
             </div>
           </div>
         </div>
@@ -289,13 +296,13 @@ export default function Home() {
       <section id="demo" className="bg-slate-900/40 border-y border-slate-800 py-20">
         <div className="max-w-5xl mx-auto px-8">
           <div className="text-center mb-12">
-            <div className="text-emerald-400 text-sm font-semibold uppercase tracking-wider mb-3">The Demo</div>
+            <div className="text-emerald-400 text-sm font-semibold uppercase tracking-wider mb-3">The Workflow</div>
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
               From WhatsApp inquiry to approved action
             </h2>
             <p className="text-slate-400 max-w-xl mx-auto">
-              Watch how a single catering message triggers 5 AI agents and produces
-              a quote, ops check, task list, and call script in seconds.
+              One message triggers 6 AI agents that build a quote, proposal deck, invoice,
+              call script, and task list — all waiting for your approval.
             </p>
           </div>
 
@@ -333,19 +340,19 @@ export default function Home() {
       <section id="agents" className="max-w-5xl mx-auto px-8 py-20">
         <div className="text-center mb-12">
           <div className="text-emerald-400 text-sm font-semibold uppercase tracking-wider mb-3">The Team</div>
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">5 AI Agents, 1 Platform</h2>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">6 AI Agents, 1 Platform</h2>
           <p className="text-slate-400 max-w-xl mx-auto">
             Each agent is specialized for a distinct business function.
-            They work in parallel, then surface recommendations for owner approval.
+            They run in parallel, then surface recommendations for owner approval.
           </p>
         </div>
-        <div className="grid md:grid-cols-5 gap-4">
+        <div className="grid md:grid-cols-3 gap-4">
           {AGENTS.map((agent) => {
             const Icon = agent.icon;
             return (
               <div
                 key={agent.name}
-                className={`bg-slate-900 border rounded-xl p-5 flex flex-col gap-3 ${agent.color.includes("border") ? "" : "border-slate-800"}`}
+                className="bg-slate-900 border border-slate-800 rounded-xl p-5 flex flex-col gap-3"
               >
                 <div className={`w-10 h-10 rounded-lg border flex items-center justify-center ${agent.color}`}>
                   <Icon className="w-5 h-5" />
@@ -370,11 +377,11 @@ export default function Home() {
           </div>
           <div className="grid md:grid-cols-5 gap-6">
             {[
-              { n: "1", title: "Connect WhatsApp", desc: "Scan QR with your demo number. Production uses Meta WhatsApp Business API.", icon: MessageSquare },
-              { n: "2", title: "Receive Messages", desc: "Customer orders, inquiries, supplier updates — everything lands in one inbox.", icon: Bot },
-              { n: "3", title: "AI Routes Work", desc: "Router classifies intent, urgency, and value. Sends to relevant agents.", icon: Zap },
-              { n: "4", title: "Owner Reviews", desc: "All recommendations shown in one approval queue. Nothing goes out unreviewed.", icon: Shield },
-              { n: "5", title: "Business Acts", desc: "Approved reply sent. Quote generated. Tasks created. Stock alerts raised.", icon: CheckCircle },
+              { n: "1", title: "Connect WhatsApp", desc: "Scan QR or connect via WhatsApp Business API. All messages land in ServeOps.", icon: MessageSquare },
+              { n: "2", title: "Message Arrives", desc: "Inquiry, order, review, or question — every message is captured automatically.", icon: Bot },
+              { n: "3", title: "AI Routes & Acts", desc: "Router classifies intent and urgency. 6 agents build outputs in parallel.", icon: Zap },
+              { n: "4", title: "Owner Reviews", desc: "Every action — quote, proposal, invoice, script — waits for your approval.", icon: Shield },
+              { n: "5", title: "Business Acts", desc: "Approve once. Reply sent, proposal shared, invoice drafted, tasks created.", icon: CheckCircle },
             ].map((step) => {
               const Icon = step.icon;
               return (
@@ -415,38 +422,38 @@ export default function Home() {
         {/* Trust line */}
         <div className="bg-emerald-500/8 border border-emerald-500/20 rounded-2xl p-6 text-center">
           <Shield className="w-6 h-6 text-emerald-400 mx-auto mb-3" />
-          <div className="text-lg font-semibold text-white mb-1">Important actions stay owner-approved.</div>
+          <div className="text-lg font-semibold text-white mb-1">Every action is owner-approved.</div>
           <p className="text-sm text-slate-400 max-w-md mx-auto">
-            ServeOps AI never sends a message, creates a quote, or raises an alert
-            without explicit owner approval. You stay in control.
+            ServeOps AI never sends a message, creates a proposal, or raises an invoice
+            without explicit owner approval. You stay in full control.
           </p>
         </div>
       </section>
 
-      {/* ── EXPANSION ── */}
+      {/* ── INDUSTRY FIT ── */}
       <section className="bg-slate-900/40 border-y border-slate-800 py-20">
         <div className="max-w-5xl mx-auto px-8">
           <div className="text-center mb-10">
-            <div className="text-emerald-400 text-sm font-semibold uppercase tracking-wider mb-3">Expansion</div>
-            <h2 className="text-3xl font-bold mb-3">Starting with F&amp;B. Built to scale.</h2>
+            <div className="text-emerald-400 text-sm font-semibold uppercase tracking-wider mb-3">Industry Fit</div>
+            <h2 className="text-3xl font-bold mb-3">Works for any SME that sells on WhatsApp.</h2>
             <p className="text-slate-400 max-w-xl mx-auto text-sm">
-              The same WhatsApp front-desk + AI operating-team model works across any
-              service SME. The business data, prompts, and workflows adapt by vertical.
+              Same platform, same 6 agents. The business context adapts — pricing, proposals,
+              scripts, and follow-ups are tailored to your industry automatically.
             </p>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
             {VERTICALS.map((v) => (
               <div
                 key={v.name}
-                className={`rounded-xl border p-4 text-center transition-colors ${
+                className={`rounded-xl border p-4 transition-colors ${
                   v.active
                     ? "bg-emerald-500/10 border-emerald-500/30"
-                    : "bg-slate-900 border-slate-800 opacity-60"
+                    : "bg-slate-900 border-slate-800 opacity-50"
                 }`}
               >
-                <div className={`font-semibold text-sm mb-1 ${v.active ? "text-emerald-300" : "text-slate-400"}`}>
+                <div className={`font-semibold text-sm mb-1 flex items-center gap-1.5 ${v.active ? "text-emerald-300" : "text-slate-400"}`}>
                   {v.name}
-                  {v.active && <span className="ml-1 text-emerald-500 text-xs">●</span>}
+                  {v.active && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />}
                 </div>
                 <div className="text-xs text-slate-500 leading-snug">{v.desc}</div>
               </div>
@@ -463,8 +470,8 @@ export default function Home() {
           <span className="text-emerald-400">They need an operating team.</span>
         </h2>
         <p className="text-slate-400 mb-10 text-lg">
-          ServeOps AI gives every SME an AI Sales, Ops, Admin, Marketing, and Call team
-          that turns messages into action.
+          ServeOps AI gives every SME an AI Sales, Proposal, Invoice, Call, Admin, and Marketing
+          team that turns WhatsApp messages into business action.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link
