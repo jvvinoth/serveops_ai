@@ -2,21 +2,28 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
+  ArrowLeft,
   Bot,
   Briefcase,
   CalendarClock,
+  CheckCheck,
   CheckCircle2,
   ChevronRight,
   FileText,
   Loader2,
+  Mic,
   MessageCircle,
+  MoreVertical,
+  Paperclip,
   Phone,
   Play,
   Receipt,
   RefreshCw,
+  Search,
   Send,
   Sparkles,
   UserRound,
+  Video,
 } from "lucide-react";
 
 type Message = {
@@ -215,118 +222,177 @@ function WhatsAppPhone({
   onSend: () => void;
 }) {
   const messages = detail?.customer.phone === selected.phone ? detail.messages : [];
+  const currentTime = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
   return (
-    <section className="rounded-[2rem] border border-slate-700 bg-slate-950 p-3 shadow-2xl shadow-black/40">
-      <div className="overflow-hidden rounded-[1.55rem] border border-slate-800 bg-[#0b141a]">
-        <div className="flex items-center justify-between border-b border-slate-800 bg-[#111b21] px-4 py-3">
-          <div className="flex items-center gap-2">
-            <div className="h-7 w-7 rounded-full bg-emerald-500/20 text-xs font-bold text-emerald-200 flex items-center justify-center">
-              SO
-            </div>
-            <div>
-              <div className="text-sm font-semibold text-white">ServeOps WhatsApp</div>
-              <div className="text-[11px] text-emerald-300">mock business number · online</div>
+    <section data-testid="wa-phone" className="mx-auto w-full max-w-[400px]">
+      <div className="rounded-[3rem] border border-slate-700 bg-black p-2 shadow-2xl shadow-black/60">
+        <div className="relative overflow-hidden rounded-[2.65rem] border border-slate-800 bg-[#0b141a]">
+          <div className="absolute left-1/2 top-2 z-30 h-6 w-28 -translate-x-1/2 rounded-full bg-black" />
+
+          <div className="relative z-20 flex h-10 items-center justify-between bg-[#075e54] px-7 pt-2 text-[11px] font-semibold text-white">
+            <span>{currentTime}</span>
+            <div className="flex items-center gap-1.5">
+              <span className="h-2.5 w-3.5 rounded-[3px] border border-white/80">
+                <span className="block h-full w-2.5 rounded-[2px] bg-white" />
+              </span>
+              <span className="h-3 w-4 rounded-sm border-t-2 border-white/90" />
+              <span className="h-3 w-4 rounded-sm border-t-2 border-white/90" />
             </div>
           </div>
-          <MessageCircle className="h-4 w-4 text-slate-500" />
-        </div>
 
-        <div className="grid h-[650px] grid-rows-[170px_1fr_auto]">
-          <div className="border-b border-slate-800 bg-[#111b21] p-3">
-            <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-              Customer contacts
+          <div className="bg-[#075e54] px-4 pb-3 pt-2">
+            <div className="mb-3 flex items-center justify-between">
+              <div>
+                <div className="text-xl font-bold text-white">WhatsApp</div>
+                <div className="text-[11px] font-medium text-white/70">ServeOps demo number</div>
+              </div>
+              <div className="flex items-center gap-3 text-white/90">
+                <Search className="h-5 w-5" />
+                <MoreVertical className="h-5 w-5" />
+              </div>
             </div>
-            <div className="space-y-1.5">
-              {contacts.map((contact) => (
-                <button
-                  key={contact.id}
-                  onClick={() => {
-                    onSelect(contact);
-                    setDraft(contact.message);
-                  }}
-                  className={`flex w-full items-center gap-2 rounded-xl px-2 py-2 text-left transition ${
-                    contact.id === selected.id ? "bg-emerald-500/10" : "hover:bg-slate-800/60"
-                  }`}
+
+            <div className="flex rounded-full bg-[#0b4f47] p-1 text-xs font-semibold text-white/75">
+              {["Chats", "Updates", "Calls"].map((tab, index) => (
+                <div
+                  key={tab}
+                  className={`flex-1 rounded-full px-3 py-1.5 text-center ${index === 0 ? "bg-white text-[#075e54]" : ""}`}
                 >
-                  <div className="h-8 w-8 flex-shrink-0 rounded-full bg-slate-700 text-[11px] font-bold text-white flex items-center justify-center">
-                    {contact.avatar}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="truncate text-xs font-semibold text-white">{contact.name}</div>
-                    <div className="truncate text-[11px] text-slate-500">{contact.company}</div>
-                  </div>
-                </button>
+                  {tab}
+                </div>
               ))}
             </div>
           </div>
 
-          <div className="overflow-y-auto bg-[radial-gradient(circle_at_top,#18352c_0,#0b141a_38%)] p-3">
-            <div className="mb-3 flex items-center gap-2 rounded-xl bg-[#111b21]/90 px-3 py-2">
-              <div className="h-8 w-8 rounded-full bg-slate-700 text-[11px] font-bold text-white flex items-center justify-center">
-                {selected.avatar}
+          <div className="grid h-[430px] grid-rows-[132px_auto_1fr_auto] bg-[#0b141a]">
+            <div className="overflow-hidden border-b border-[#1f2c33] bg-[#111b21] px-3 py-3">
+              <div className="mb-3 rounded-full bg-[#202c33] px-3 py-2 text-xs text-slate-400">
+                Search or start new chat
               </div>
-              <div className="min-w-0">
-                <div className="truncate text-sm font-semibold text-white">{selected.name}</div>
-                <div className="truncate text-[11px] text-slate-400">{selected.segment} · {selected.phone}</div>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <div className="max-w-[88%] rounded-2xl rounded-tl-sm bg-[#202c33] px-3 py-2 text-xs leading-relaxed text-slate-200">
-                {selected.preview}
-                <div className="mt-1 text-right text-[10px] text-slate-500">profile note</div>
-              </div>
-
-              {messages.map((message) => (
-                <div
-                  key={message.id}
-                  className={`flex ${message.direction === "outbound" ? "justify-end" : "justify-start"}`}
-                >
-                  <div
-                    className={`max-w-[86%] rounded-2xl px-3 py-2 text-xs leading-relaxed ${
-                      message.direction === "outbound"
-                        ? "rounded-tr-sm bg-[#005c4b] text-white"
-                        : "rounded-tl-sm bg-[#202c33] text-slate-100"
+              <div className="grid grid-cols-4 gap-2">
+                {contacts.map((contact) => (
+                  <button
+                    key={contact.id}
+                    onClick={() => {
+                      onSelect(contact);
+                      setDraft(contact.message);
+                    }}
+                    className={`min-w-0 rounded-xl px-1.5 py-2 text-center transition ${
+                      contact.id === selected.id ? "bg-[#0b4f47]/70" : "hover:bg-[#202c33]"
                     }`}
                   >
-                    {message.body}
-                    <div className="mt-1 text-right text-[10px] text-slate-300/70">
-                      {timeLabel(message.timestamp)}
-                      {message.source === "simulator" ? " · customer" : ""}
-                      {message.source === "agent" ? " · AI draft" : ""}
+                    <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-cyan-700 text-xs font-bold text-white">
+                      {contact.avatar}
                     </div>
-                  </div>
-                </div>
-              ))}
+                    <div className="mt-1 truncate text-[10px] font-semibold text-white">{contact.name.split(" ")[0]}</div>
+                    <div className="truncate text-[9px] text-slate-400">{contact.segment}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
 
-              {sending && (
-                <div className="flex justify-start">
-                  <div className="rounded-2xl rounded-tl-sm bg-[#202c33] px-3 py-2 text-xs text-slate-300">
-                    Sending message...
-                  </div>
+            <div className="border-b border-[#1f2c33] bg-[#202c33] px-3 py-2">
+              <div className="flex items-center gap-2.5">
+                <ArrowLeft className="h-4 w-4 text-slate-300" />
+                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-cyan-700 text-xs font-bold text-white">
+                  {selected.avatar}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-sm font-semibold text-white">{selected.name}</div>
+                  <div className="truncate text-[11px] text-slate-400">{selected.company} · {selected.phone}</div>
+                </div>
+                <Video className="h-4 w-4 text-slate-300" />
+                <Phone className="h-4 w-4 text-slate-300" />
+                <MoreVertical className="h-4 w-4 text-slate-300" />
+              </div>
+            </div>
+
+            <div className="overflow-y-auto bg-[#0b141a] px-3 py-4 [background-image:linear-gradient(rgba(255,255,255,0.025)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.025)_1px,transparent_1px)] [background-size:22px_22px]">
+              <div className="mx-auto mb-4 w-fit rounded-lg bg-[#182229] px-3 py-1 text-[10px] font-medium text-slate-400">
+                Today
+              </div>
+
+              <div className="mb-3 flex justify-start">
+                <div className="max-w-[86%] rounded-2xl rounded-tl-sm bg-[#202c33] px-3 py-2 text-xs leading-relaxed text-slate-200 shadow">
+                  {selected.preview}
+                  <div className="mt-1 text-right text-[10px] text-slate-500">profile note</div>
+                </div>
+              </div>
+
+              {messages.length === 0 && (
+                <div className="mb-3 rounded-xl bg-[#182229]/95 px-3 py-2 text-center text-[11px] leading-relaxed text-slate-400">
+                  Type or send the prepared customer message below.
                 </div>
               )}
+
+              <div className="space-y-2">
+                {messages.map((message) => (
+                  <div
+                    key={message.id}
+                    className={`flex ${message.direction === "outbound" ? "justify-end" : "justify-start"}`}
+                  >
+                    <div
+                      className={`max-w-[86%] rounded-2xl px-3 py-2 text-xs leading-relaxed shadow ${
+                        message.direction === "outbound"
+                          ? "rounded-tr-sm bg-[#005c4b] text-white"
+                          : "rounded-tl-sm bg-[#202c33] text-slate-100"
+                      }`}
+                    >
+                      {message.body}
+                      <div className="mt-1 flex items-center justify-end gap-1 text-[10px] text-slate-300/70">
+                        <span>{timeLabel(message.timestamp)}</span>
+                        {message.direction === "outbound" && <CheckCheck className="h-3 w-3 text-sky-300" />}
+                        {message.source === "agent" && <span>AI draft</span>}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+
+                {sending && (
+                  <div className="flex justify-start">
+                    <div className="rounded-2xl rounded-tl-sm bg-[#202c33] px-3 py-2 text-xs text-slate-300">
+                      Sending message...
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="border-t border-[#1f2c33] bg-[#111b21] p-3">
+              <div className="mb-2 flex items-end gap-2">
+                <div className="flex min-w-0 flex-1 items-end gap-2 rounded-3xl bg-[#202c33] px-3 py-2">
+                  <MessageCircle className="mb-1 h-4 w-4 flex-shrink-0 text-slate-400" />
+                  <textarea
+                    value={draft}
+                    onChange={(event) => setDraft(event.target.value)}
+                    rows={2}
+                    className="max-h-16 min-h-[38px] flex-1 resize-none bg-transparent text-xs leading-relaxed text-white placeholder:text-slate-500 focus:outline-none"
+                    placeholder="Message"
+                  />
+                  <Paperclip className="mb-1 h-4 w-4 flex-shrink-0 text-slate-400" />
+                </div>
+                <button
+                  onClick={onSend}
+                  disabled={sending || !draft.trim()}
+                  className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-[#00a884] text-white transition hover:bg-[#06cf9c] disabled:cursor-not-allowed disabled:opacity-50"
+                  aria-label="Send customer message"
+                >
+                  {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                </button>
+              </div>
+              <button
+                onClick={onSend}
+                disabled={sending || !draft.trim()}
+                className="flex w-full items-center justify-center gap-2 rounded-full border border-[#00a884]/40 bg-[#00a884]/10 px-4 py-2 text-xs font-bold text-[#8ff5d2] transition hover:bg-[#00a884]/20 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mic className="h-4 w-4" />}
+                Send as customer into AI operating team
+              </button>
             </div>
           </div>
 
-          <div className="border-t border-slate-800 bg-[#111b21] p-3">
-            <textarea
-              value={draft}
-              onChange={(event) => setDraft(event.target.value)}
-              rows={4}
-              className="mb-2 w-full resize-none rounded-xl border border-slate-700 bg-[#202c33] px-3 py-2 text-xs leading-relaxed text-white placeholder:text-slate-500 focus:border-emerald-500/60 focus:outline-none"
-              placeholder="Send as customer..."
-            />
-            <button
-              onClick={onSend}
-              disabled={sending || !draft.trim()}
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-              Send Customer Message
-            </button>
-          </div>
+          <div className="h-4 bg-black" />
         </div>
       </div>
     </section>
@@ -747,17 +813,17 @@ export default function LiveSimulatorPage() {
 
   return (
     <main className="min-h-screen bg-slate-950 text-white">
-      <div className="mx-auto max-w-[1540px] px-5 py-5">
-        <header className="mb-5 flex flex-col justify-between gap-4 rounded-2xl border border-slate-800 bg-slate-900/80 p-5 md:flex-row md:items-center">
+      <div className="mx-auto max-w-[1540px] px-5 py-4">
+        <header className="mb-4 flex flex-col justify-between gap-3 rounded-2xl border border-slate-800 bg-slate-900/80 p-3 md:flex-row md:items-center">
           <div>
-            <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-emerald-300">
+            <div className="mb-1 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-emerald-300">
               <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,.8)]" />
               Live demo simulator
             </div>
-            <h1 className="text-2xl font-bold tracking-tight text-white md:text-3xl">
+            <h1 className="text-xl font-bold tracking-tight text-white md:text-2xl">
               WhatsApp message → AI business deliverables
             </h1>
-            <p className="mt-1 max-w-3xl text-sm leading-relaxed text-slate-400">
+            <p className="mt-1 max-w-3xl text-xs leading-relaxed text-slate-400">
               Select a customer profile, send a realistic WhatsApp inquiry, then watch ServeOps route the work to agents that create a reply, call plan, proposal deck, invoice draft, and follow-up tasks.
             </p>
           </div>
@@ -790,19 +856,21 @@ export default function LiveSimulatorPage() {
           </div>
         )}
 
-        <div className="grid gap-5 lg:grid-cols-[430px_minmax(0,1fr)]">
-          <WhatsAppPhone
-            contacts={contacts}
-            selected={selected}
-            onSelect={selectContact}
-            detail={detail}
-            draft={draft}
-            setDraft={setDraft}
-            sending={sending}
-            onSend={() => sendMessage()}
-          />
+        <div className="grid items-start gap-5 lg:grid-cols-[minmax(390px,430px)_minmax(0,1fr)]">
+          <div className="lg:sticky lg:top-5">
+            <WhatsAppPhone
+              contacts={contacts}
+              selected={selected}
+              onSelect={selectContact}
+              detail={detail}
+              draft={draft}
+              setDraft={setDraft}
+              sending={sending}
+              onSend={() => sendMessage()}
+            />
+          </div>
 
-          <div className="space-y-5">
+          <div data-testid="agent-scroll-panel" className="space-y-5 lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto lg:pr-2">
             <section className="grid gap-3 md:grid-cols-4">
               {[
                 { label: "Active customer", value: selected.name, sub: selected.company, icon: UserRound },
