@@ -1618,7 +1618,7 @@ export default function LiveSimulatorPage() {
   }
 
   return (
-    <main className="h-screen overflow-hidden bg-slate-950 text-white">
+    <main className="h-[100dvh] overflow-hidden bg-slate-950 text-white">
       <div className="mx-auto flex h-full max-w-[1540px] flex-col px-5 py-4">
         <header className="mb-3 flex flex-col justify-between gap-3 rounded-2xl border border-slate-800 bg-slate-900/80 p-3 md:flex-row md:items-center">
           <div>
@@ -1669,8 +1669,8 @@ export default function LiveSimulatorPage() {
           </div>
         )}
 
-        <div className="grid min-h-0 flex-1 items-start gap-5 lg:grid-cols-[minmax(390px,430px)_minmax(0,1fr)]">
-          <div className="min-h-0 overflow-y-auto pb-4 pr-2">
+        <div className="grid min-h-0 flex-1 items-stretch gap-5 overflow-hidden lg:grid-cols-[minmax(390px,430px)_minmax(0,1fr)]">
+          <div className="h-full min-h-0 max-h-full overflow-y-scroll overscroll-contain pb-6 pr-2">
             <WhatsAppPhone
               contacts={contacts}
               selected={selected}
@@ -1683,7 +1683,7 @@ export default function LiveSimulatorPage() {
             />
           </div>
 
-          <div data-testid="agent-scroll-panel" className="min-h-0 space-y-4 overflow-y-auto pr-2">
+          <div data-testid="agent-scroll-panel" className="h-full min-h-0 max-h-full space-y-4 overflow-y-auto overscroll-contain pr-2">
             <section className="rounded-2xl border border-slate-800 bg-slate-900 p-4">
               <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                 <div>
