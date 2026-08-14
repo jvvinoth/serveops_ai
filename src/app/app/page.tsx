@@ -183,6 +183,108 @@ const DEFAULT_CUSTOM_SCENARIO = {
     "Hi, I need weekly Primary 6 Math tuition for my daughter. Can you share the monthly fees, arrange a trial class this weekend, and send registration invoice if we confirm?",
 };
 
+const DEMO_SCENARIO_SUGGESTIONS: Array<{
+  business: BusinessProfileForm;
+  customer: typeof DEFAULT_CUSTOM_SCENARIO;
+}> = [
+  {
+    business: DEFAULT_BUSINESS_FORM,
+    customer: DEFAULT_CUSTOM_SCENARIO,
+  },
+  {
+    business: {
+      businessName: "Kopi & Bowl Catering",
+      industry: "F&B catering",
+      offerSummary: "Corporate lunch boxes, buffet catering, and cafe event support for Singapore SMEs.",
+      paymentTerms: "50% deposit by PayNow to confirm, balance after event.",
+      availability: "Today 5pm, tomorrow 11am, or Friday 3pm",
+      tone: "fast, friendly, practical",
+      servicesText: [
+        "Corporate Lunch Box Set | 720 | 60 halal-friendly lunch boxes with delivery",
+        "Mini Buffet Package | 1280 | Buffet setup for up to 80 pax",
+        "Cafe Launch Catering | 3200 | Menu planning, staffing, and launch-day food service",
+      ].join("\n"),
+    },
+    customer: {
+      name: "Daniel Lim",
+      company: "Office manager",
+      phone: "+6597001201",
+      segment: "F&B catering",
+      message:
+        "Hi, we need lunch catering for 60 pax next Friday. Can you share menu options, send a proposal, and prepare a deposit invoice if we confirm today?",
+    },
+  },
+  {
+    business: {
+      businessName: "CoolCare Aircon Services",
+      industry: "Aircon servicing and repair",
+      offerSummary: "Aircon cleaning, leak troubleshooting, and maintenance packages for homes and small businesses.",
+      paymentTerms: "PayNow or bank transfer. 50% deposit for repair jobs, balance after service.",
+      availability: "Tomorrow 10am, tomorrow 3pm, or Friday 11am",
+      tone: "practical, reassuring, fast",
+      servicesText: [
+        "3 Unit Aircon Chemical Wash | 260 | Deep clean for three indoor aircon units",
+        "Leak Troubleshooting Visit | 180 | Diagnose leaking aircon and recommend repair",
+        "Quarterly Maintenance Package | 420 | Scheduled servicing for SME premises",
+      ].join("\n"),
+    },
+    customer: {
+      name: "Farah Rahman",
+      company: "Cafe owner",
+      phone: "+6597001202",
+      segment: "Aircon repair",
+      message:
+        "Hi, my cafe has 3 aircon units and one is leaking. Can you send service pricing, arrange a visit tomorrow, and invoice us if we confirm?",
+    },
+  },
+  {
+    business: {
+      businessName: "Glow Bridal Studio",
+      industry: "Salon / spa",
+      offerSummary: "Bridal facial, makeup trials, event styling, and consultation packages.",
+      paymentTerms: "30% deposit to reserve appointment, balance on service day.",
+      availability: "Wednesday 7pm, Saturday 11am, or Sunday 4pm",
+      tone: "elegant, warm, consultative",
+      servicesText: [
+        "Bridal Facial Consultation | 180 | Skin review and treatment recommendation",
+        "Bridal Makeup Trial | 260 | Trial makeup session with styling notes",
+        "Complete Bridal Beauty Package | 980 | Facial, trial, event-day makeup, and follow-up care",
+      ].join("\n"),
+    },
+    customer: {
+      name: "Nora Lee",
+      company: "Bridal customer",
+      phone: "+6597001203",
+      segment: "Salon / spa",
+      message:
+        "Hi, I need a bridal facial and makeup package for September. Can you recommend options, schedule a consultation, and send the deposit invoice?",
+    },
+  },
+  {
+    business: {
+      businessName: "NestCraft Renovation",
+      industry: "Renovation contractor",
+      offerSummary: "BTO renovation planning, site visits, phased proposals, and renovation budget estimates.",
+      paymentTerms: "Site visit fee upfront. Renovation deposit after final scope approval.",
+      availability: "Tomorrow 6pm, Saturday 10am, or Sunday 2pm",
+      tone: "clear, reliable, detail-oriented",
+      servicesText: [
+        "BTO Site Visit | 150 | On-site measurement and renovation needs assessment",
+        "Kitchen Renovation Package | 6800 | Cabinetry, countertop, electrical coordination",
+        "4-Room BTO Full Proposal | 12000 | Concept, phased scope, budget and timeline",
+      ].join("\n"),
+    },
+    customer: {
+      name: "Jason Ong",
+      company: "Tampines BTO",
+      phone: "+6597001204",
+      segment: "Renovation",
+      message:
+        "Hi, I just got keys to my 4-room BTO in Tampines. Can you schedule a site visit and send a proposal with package estimate?",
+    },
+  },
+];
+
 const AGENT_LABELS: Record<string, { label: string; icon: typeof Bot; color: string }> = {
   sales: { label: "Sales Agent", icon: MessageCircle, color: "text-blue-300 bg-blue-500/10 border-blue-500/20" },
   proposal: { label: "Proposal Agent", icon: Briefcase, color: "text-indigo-300 bg-indigo-500/10 border-indigo-500/20" },
@@ -250,15 +352,31 @@ function Field({
   value,
   onChange,
   placeholder,
+  onSuggest,
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
+  onSuggest?: () => void;
 }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">{label}</span>
+      <span className="mb-1 flex items-center justify-between gap-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+        {label}
+        {onSuggest ? (
+          <button
+            type="button"
+            onClick={(event) => {
+              event.preventDefault();
+              onSuggest();
+            }}
+            className="rounded-full border border-slate-700 px-2 py-0.5 text-[10px] font-bold normal-case tracking-normal text-cyan-300 hover:border-cyan-500/60 hover:text-cyan-200"
+          >
+            Suggest
+          </button>
+        ) : null}
+      </span>
       <input
         value={value}
         onChange={(event) => onChange(event.target.value)}
@@ -273,10 +391,12 @@ function BusinessSetupPanel({
   form,
   setForm,
   profile,
+  suggestBusinessField,
 }: {
   form: BusinessProfileForm;
   setForm: (next: BusinessProfileForm) => void;
   profile: BusinessProfile;
+  suggestBusinessField?: (field: keyof BusinessProfileForm) => void;
 }) {
   function update<K extends keyof BusinessProfileForm>(key: K, value: BusinessProfileForm[K]) {
     setForm({ ...form, [key]: value });
@@ -302,14 +422,25 @@ function BusinessSetupPanel({
       </div>
 
       <div className="grid gap-3 md:grid-cols-2">
-        <Field label="Business name" value={form.businessName} onChange={(value) => update("businessName", value)} />
-        <Field label="Industry" value={form.industry} onChange={(value) => update("industry", value)} />
-        <Field label="Payment terms" value={form.paymentTerms} onChange={(value) => update("paymentTerms", value)} />
-        <Field label="Call availability" value={form.availability} onChange={(value) => update("availability", value)} />
+        <Field label="Business name" value={form.businessName} onChange={(value) => update("businessName", value)} onSuggest={() => suggestBusinessField?.("businessName")} />
+        <Field label="Industry" value={form.industry} onChange={(value) => update("industry", value)} onSuggest={() => suggestBusinessField?.("industry")} />
+        <Field label="Payment terms" value={form.paymentTerms} onChange={(value) => update("paymentTerms", value)} onSuggest={() => suggestBusinessField?.("paymentTerms")} />
+        <Field label="Call availability" value={form.availability} onChange={(value) => update("availability", value)} onSuggest={() => suggestBusinessField?.("availability")} />
       </div>
 
       <label className="mt-3 block">
-        <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">Offer summary</span>
+        <span className="mb-1 flex items-center justify-between gap-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+          Offer summary
+          {suggestBusinessField ? (
+            <button
+              type="button"
+              onClick={() => suggestBusinessField("offerSummary")}
+              className="rounded-full border border-slate-700 px-2 py-0.5 text-[10px] font-bold normal-case tracking-normal text-cyan-300 hover:border-cyan-500/60 hover:text-cyan-200"
+            >
+              Suggest
+            </button>
+          ) : null}
+        </span>
         <textarea
           value={form.offerSummary}
           onChange={(event) => update("offerSummary", event.target.value)}
@@ -319,7 +450,18 @@ function BusinessSetupPanel({
       </label>
 
       <label className="mt-3 block">
-        <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">Services and pricing</span>
+        <span className="mb-1 flex items-center justify-between gap-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+          Services and pricing
+          {suggestBusinessField ? (
+            <button
+              type="button"
+              onClick={() => suggestBusinessField("servicesText")}
+              className="rounded-full border border-slate-700 px-2 py-0.5 text-[10px] font-bold normal-case tracking-normal text-cyan-300 hover:border-cyan-500/60 hover:text-cyan-200"
+            >
+              Suggest
+            </button>
+          ) : null}
+        </span>
         <textarea
           value={form.servicesText}
           onChange={(event) => update("servicesText", event.target.value)}
@@ -336,10 +478,12 @@ function CustomScenarioPanel({
   value,
   onChange,
   onUse,
+  suggestCustomerField,
 }: {
   value: typeof DEFAULT_CUSTOM_SCENARIO;
   onChange: (next: typeof DEFAULT_CUSTOM_SCENARIO) => void;
   onUse: () => void;
+  suggestCustomerField?: (field: keyof typeof DEFAULT_CUSTOM_SCENARIO) => void;
 }) {
   function update<K extends keyof typeof DEFAULT_CUSTOM_SCENARIO>(key: K, nextValue: (typeof DEFAULT_CUSTOM_SCENARIO)[K]) {
     onChange({ ...value, [key]: nextValue });
@@ -368,12 +512,23 @@ function CustomScenarioPanel({
       </div>
 
       <div className="grid gap-3 md:grid-cols-3">
-        <Field label="Customer" value={value.name} onChange={(next) => update("name", next)} />
-        <Field label="Context" value={value.company} onChange={(next) => update("company", next)} />
-        <Field label="Phone" value={value.phone} onChange={(next) => update("phone", next)} />
+        <Field label="Customer" value={value.name} onChange={(next) => update("name", next)} onSuggest={() => suggestCustomerField?.("name")} />
+        <Field label="Context" value={value.company} onChange={(next) => update("company", next)} onSuggest={() => suggestCustomerField?.("company")} />
+        <Field label="Phone" value={value.phone} onChange={(next) => update("phone", next)} onSuggest={() => suggestCustomerField?.("phone")} />
       </div>
       <label className="mt-3 block">
-        <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">WhatsApp message</span>
+        <span className="mb-1 flex items-center justify-between gap-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+          WhatsApp message
+          {suggestCustomerField ? (
+            <button
+              type="button"
+              onClick={() => suggestCustomerField("message")}
+              className="rounded-full border border-slate-700 px-2 py-0.5 text-[10px] font-bold normal-case tracking-normal text-cyan-300 hover:border-cyan-500/60 hover:text-cyan-200"
+            >
+              Suggest
+            </button>
+          ) : null}
+        </span>
         <textarea
           value={value.message}
           onChange={(event) => update("message", event.target.value)}
@@ -382,6 +537,108 @@ function CustomScenarioPanel({
         />
       </label>
     </section>
+  );
+}
+
+function pickDemoSuggestion() {
+  return DEMO_SCENARIO_SUGGESTIONS[Math.floor(Math.random() * DEMO_SCENARIO_SUGGESTIONS.length)];
+}
+
+function BusinessScenarioModal({
+  form,
+  setForm,
+  profile,
+  customScenario,
+  setCustomScenario,
+  onApply,
+  onClose,
+}: {
+  form: BusinessProfileForm;
+  setForm: (next: BusinessProfileForm) => void;
+  profile: BusinessProfile;
+  customScenario: typeof DEFAULT_CUSTOM_SCENARIO;
+  setCustomScenario: (next: typeof DEFAULT_CUSTOM_SCENARIO) => void;
+  onApply: () => void;
+  onClose: () => void;
+}) {
+  function fillFullScenario() {
+    const suggestion = pickDemoSuggestion();
+    setForm(suggestion.business);
+    setCustomScenario(suggestion.customer);
+  }
+
+  function suggestBusinessField(field: keyof BusinessProfileForm) {
+    const suggestion = pickDemoSuggestion();
+    setForm({ ...form, [field]: suggestion.business[field] });
+  }
+
+  function suggestCustomerField(field: keyof typeof DEFAULT_CUSTOM_SCENARIO) {
+    const suggestion = pickDemoSuggestion();
+    setCustomScenario({ ...customScenario, [field]: suggestion.customer[field] });
+  }
+
+  return (
+    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
+      <section className="flex max-h-[92vh] w-full max-w-5xl flex-col overflow-hidden rounded-3xl border border-slate-700 bg-slate-950 text-white shadow-2xl">
+        <header className="flex flex-col gap-3 border-b border-slate-800 bg-slate-900 px-5 py-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <div className="mb-1 flex items-center gap-2 text-[11px] font-bold uppercase tracking-wide text-cyan-300">
+              <Wand2 className="h-3.5 w-3.5" />
+              New business scenario
+            </div>
+            <h2 className="text-lg font-bold">Create a business + WhatsApp test case</h2>
+            <p className="mt-1 text-xs text-slate-500">
+              Fill once, then the AI agents run using this business profile and customer message.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={fillFullScenario}
+              className="flex items-center gap-2 rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-3 py-2 text-xs font-bold text-cyan-200 hover:bg-cyan-500/20"
+            >
+              <Wand2 className="h-4 w-4" />
+              Fill random demo
+            </button>
+            <button
+              onClick={onClose}
+              className="rounded-xl border border-slate-700 px-3 py-2 text-xs font-bold text-slate-300 hover:border-slate-500 hover:text-white"
+            >
+              Close
+            </button>
+          </div>
+        </header>
+
+        <div className="min-h-0 flex-1 overflow-y-auto p-5">
+          <div className="grid gap-5">
+            <BusinessSetupPanel
+              form={form}
+              setForm={setForm}
+              profile={profile}
+              suggestBusinessField={suggestBusinessField}
+            />
+            <CustomScenarioPanel
+              value={customScenario}
+              onChange={setCustomScenario}
+              onUse={onApply}
+              suggestCustomerField={suggestCustomerField}
+            />
+          </div>
+        </div>
+
+        <footer className="flex flex-col gap-2 border-t border-slate-800 bg-slate-900 px-5 py-4 md:flex-row md:items-center md:justify-between">
+          <p className="text-xs leading-relaxed text-slate-500">
+            Current setup: <span className="font-semibold text-slate-300">{profile.businessName}</span> · {profile.industry} · {profile.services.length} priced services
+          </p>
+          <button
+            onClick={onApply}
+            className="flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-emerald-500"
+          >
+            <Plus className="h-4 w-4" />
+            Use this scenario in WhatsApp
+          </button>
+        </footer>
+      </section>
+    </div>
   );
 }
 
@@ -1072,7 +1329,7 @@ function LiveCallAgentModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-      <section className="w-full max-w-4xl overflow-hidden rounded-3xl border border-slate-700 bg-slate-950 text-white shadow-2xl">
+      <section className="flex max-h-[92vh] w-full max-w-4xl flex-col overflow-hidden rounded-3xl border border-slate-700 bg-slate-950 text-white shadow-2xl">
         <header className="flex items-center justify-between border-b border-slate-800 bg-slate-900 px-5 py-4">
           <div className="flex items-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-cyan-500/15 text-cyan-200">
@@ -1088,8 +1345,8 @@ function LiveCallAgentModal({
           </button>
         </header>
 
-        <div className="grid gap-5 p-5 md:grid-cols-[290px_minmax(0,1fr)]">
-          <div className="rounded-[2.2rem] border border-slate-700 bg-black p-3">
+        <div className="grid min-h-0 flex-1 gap-5 p-5 md:grid-cols-[290px_minmax(0,1fr)]">
+          <div className="rounded-[2.2rem] border border-slate-700 bg-black p-3 md:self-start">
             <div className="flex min-h-[430px] flex-col justify-center rounded-[1.8rem] bg-[#101820] px-5 py-8 text-center">
               {starting && (
                 <div className="flex flex-col items-center gap-3 text-slate-300">
@@ -1135,7 +1392,7 @@ function LiveCallAgentModal({
             </div>
           </div>
 
-          <div>
+          <div className="min-h-0 overflow-y-auto pr-2">
             {call ? (
               <div className="space-y-4">
                 <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-4">
@@ -1229,6 +1486,7 @@ function DeliverablesPanel({
 export default function LiveSimulatorPage() {
   const [businessForm, setBusinessForm] = useState<BusinessProfileForm>(DEFAULT_BUSINESS_FORM);
   const [customScenario, setCustomScenario] = useState(DEFAULT_CUSTOM_SCENARIO);
+  const [scenarioModalOpen, setScenarioModalOpen] = useState(false);
   const [selected, setSelected] = useState(CONTACTS[0]);
   const [draft, setDraft] = useState(CONTACTS[0].message);
   const [sending, setSending] = useState(false);
@@ -1303,6 +1561,15 @@ export default function LiveSimulatorPage() {
     setDetail(null);
   }
 
+  function applyCustomScenario() {
+    setSelected(customContact);
+    setConversationId(null);
+    setDetail(null);
+    setDraft(customContact.message);
+    setScenarioModalOpen(false);
+    setNotice(`${businessProfile.businessName} scenario loaded into the WhatsApp simulator.`);
+  }
+
   async function sendMessage(messageOverride?: string) {
     const messageToSend = (messageOverride ?? draft).trim();
     if (!messageToSend) return;
@@ -1351,9 +1618,9 @@ export default function LiveSimulatorPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-950 text-white">
-      <div className="mx-auto max-w-[1540px] px-5 py-4">
-        <header className="mb-4 flex flex-col justify-between gap-3 rounded-2xl border border-slate-800 bg-slate-900/80 p-3 md:flex-row md:items-center">
+    <main className="h-screen overflow-hidden bg-slate-950 text-white">
+      <div className="mx-auto flex h-full max-w-[1540px] flex-col px-5 py-4">
+        <header className="mb-3 flex flex-col justify-between gap-3 rounded-2xl border border-slate-800 bg-slate-900/80 p-3 md:flex-row md:items-center">
           <div>
             <div className="mb-1 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-emerald-300">
               <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,.8)]" />
@@ -1367,6 +1634,13 @@ export default function LiveSimulatorPage() {
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => setScenarioModalOpen(true)}
+              className="flex items-center gap-2 rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-2.5 text-sm font-semibold text-cyan-200 hover:bg-cyan-500/20"
+            >
+              <Plus className="h-4 w-4" />
+              Create New Business Scenario
+            </button>
             <button
               onClick={() => {
                 setDraft(selected.message);
@@ -1390,13 +1664,13 @@ export default function LiveSimulatorPage() {
         </header>
 
         {notice && (
-          <div className="mb-5 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
+          <div className="mb-3 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-2 text-sm text-emerald-200">
             {notice}
           </div>
         )}
 
-        <div className="grid items-start gap-5 lg:grid-cols-[minmax(390px,430px)_minmax(0,1fr)]">
-          <div className="lg:sticky lg:top-5">
+        <div className="grid min-h-0 flex-1 items-start gap-5 lg:grid-cols-[minmax(390px,430px)_minmax(0,1fr)]">
+          <div className="min-h-0 overflow-y-auto pb-4 lg:overflow-visible">
             <WhatsAppPhone
               contacts={contacts}
               selected={selected}
@@ -1409,20 +1683,25 @@ export default function LiveSimulatorPage() {
             />
           </div>
 
-          <div data-testid="agent-scroll-panel" className="space-y-5 lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto lg:pr-2">
-            <BusinessSetupPanel form={businessForm} setForm={setBusinessForm} profile={businessProfile} />
-            <CustomScenarioPanel
-              value={customScenario}
-              onChange={setCustomScenario}
-              onUse={() => {
-                setSelected(customContact);
-                setConversationId(null);
-                setDetail(null);
-                setDraft(customContact.message);
-                setNotice("Custom scenario loaded into the WhatsApp simulator.");
-              }}
-            />
-
+          <div data-testid="agent-scroll-panel" className="min-h-0 space-y-4 overflow-y-auto pr-2">
+            <section className="rounded-2xl border border-slate-800 bg-slate-900 p-4">
+              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <div className="text-[11px] font-bold uppercase tracking-wide text-emerald-300">Active business</div>
+                  <h2 className="mt-1 text-base font-bold text-white">{businessProfile.businessName}</h2>
+                  <p className="mt-1 text-xs leading-relaxed text-slate-500">
+                    {businessProfile.industry} · {businessProfile.services.length} priced services · {businessProfile.availability}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setScenarioModalOpen(true)}
+                  className="flex items-center justify-center gap-2 rounded-xl border border-cyan-500/30 px-3 py-2 text-xs font-bold text-cyan-200 hover:bg-cyan-500/10"
+                >
+                  <Wand2 className="h-4 w-4" />
+                  Change scenario
+                </button>
+              </div>
+            </section>
             <section className="grid gap-3 md:grid-cols-4">
               {[
                 { label: "Active customer", value: selected.name, sub: selected.company, icon: UserRound },
@@ -1455,6 +1734,17 @@ export default function LiveSimulatorPage() {
             setCallItem(null);
             if (conversationId) void loadDetail(conversationId);
           }}
+        />
+      )}
+      {scenarioModalOpen && (
+        <BusinessScenarioModal
+          form={businessForm}
+          setForm={setBusinessForm}
+          profile={businessProfile}
+          customScenario={customScenario}
+          setCustomScenario={setCustomScenario}
+          onApply={applyCustomScenario}
+          onClose={() => setScenarioModalOpen(false)}
         />
       )}
     </main>
