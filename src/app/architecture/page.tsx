@@ -8,54 +8,61 @@ export const metadata = {
 
 const STACK = [
   { layer: "Frontend", tech: "Next.js 15 App Router + TypeScript", detail: "React Server Components, Tailwind CSS v4, shadcn/ui", color: "text-blue-400 border-blue-500/30 bg-blue-500/5" },
-  { layer: "AI Pipeline", tech: "5-Agent Orchestration (custom)", detail: "Router → Sales + Ops + Admin + Marketing + Call — parallel execution via Promise.all", color: "text-emerald-400 border-emerald-500/30 bg-emerald-500/5" },
+  { layer: "AI Pipeline", tech: "6-Agent Orchestration (custom)", detail: "Router → Sales + Proposal + Invoice + Admin + Marketing + Call — parallel execution via Promise.all", color: "text-emerald-400 border-emerald-500/30 bg-emerald-500/5" },
   { layer: "LLM", tech: "OpenRouter API", detail: "Abstracted LLM gateway — switch between Claude, GPT-4o, Mistral without code changes", color: "text-purple-400 border-purple-500/30 bg-purple-500/5" },
   { layer: "Database", tech: "Neon Postgres (serverless)", detail: "Prisma v7 ORM + PrismaPg driver adapter · 14 models covering all business data", color: "text-amber-400 border-amber-500/30 bg-amber-500/5" },
-  { layer: "WhatsApp", tech: "WAHA (WhatsApp HTTP API)", detail: "Self-hosted connector for demo. Production target: Meta WhatsApp Business Cloud API", color: "text-green-400 border-green-500/30 bg-green-500/5" },
-  { layer: "Deployment", tech: "Railway (target)", detail: "Container-based deployment with env var injection. Zero cold-start with Neon pooler.", color: "text-pink-400 border-pink-500/30 bg-pink-500/5" },
+  { layer: "WhatsApp", tech: "Meta WhatsApp Business Cloud API", detail: "Official Meta Cloud API with webhook verification, message templates, and business account management", color: "text-green-400 border-green-500/30 bg-green-500/5" },
+  { layer: "Deployment", tech: "Railway", detail: "Container-based deployment with env var injection. Zero cold-start with Neon pooler.", color: "text-pink-400 border-pink-500/30 bg-pink-500/5" },
 ];
 
 const AGENTS_DETAIL = [
   {
     name: "Router Agent",
     role: "Classifier",
-    prompt: "Classifies intent, urgency (low/medium/high), estimated SGD value, missing info. Returns JSON with agent routing list.",
+    prompt: "Classifies intent, urgency (low/medium/high), estimated value, customer type, and missing info. Returns JSON with agent routing list.",
     output: "routerOutput JSON → conversation record",
     color: "border-slate-600 text-slate-300",
   },
   {
     name: "Sales Agent",
     role: "Revenue",
-    prompt: "Reads menu, customer history, pricing. Drafts quotes with line-items and SGD totals. Drafts WhatsApp reply.",
+    prompt: "Reads business context, customer history, and pricing. Drafts quotes with line-items and totals. Prepares a WhatsApp reply draft.",
     output: "ApprovalItem: type=quote, type=reply",
     color: "border-blue-600 text-blue-300",
   },
   {
-    name: "Ops Agent",
-    role: "Operations",
-    prompt: "Checks inventory quantities vs reorder levels, staff availability for event date. Flags risks.",
-    output: "ApprovalItem: type=restock, type=ops",
+    name: "Proposal Agent",
+    role: "Proposals",
+    prompt: "Generates structured 6-slide pitch decks with executive summary, problem/solution, pricing tiers, and next steps tailored to the prospect.",
+    output: "ApprovalItem: type=proposal",
+    color: "border-cyan-600 text-cyan-300",
+  },
+  {
+    name: "Invoice Agent",
+    role: "Billing",
+    prompt: "Creates itemised invoices with line items, subtotal, tax, deposit amount, balance due, and configurable payment terms.",
+    output: "ApprovalItem: type=invoice",
     color: "border-orange-600 text-orange-300",
   },
   {
     name: "Admin Agent",
     role: "Admin",
-    prompt: "Creates prep task lists, staff reminders, and calendar items. Assigns deadlines and owners.",
+    prompt: "Creates prep task lists, staff reminders, and calendar items. Assigns deadlines and owners based on conversation context.",
     output: "ApprovalItem: type=tasks → Task records on approval",
     color: "border-purple-600 text-purple-300",
   },
   {
     name: "Marketing Agent",
     role: "Growth",
-    prompt: "Drafts upsell messages, review responses, promo copy relevant to the conversation context.",
+    prompt: "Drafts upsell messages, review responses, and promo copy relevant to the conversation context and business type.",
     output: "ApprovalItem: type=promo",
     color: "border-pink-600 text-pink-300",
   },
   {
     name: "Call Agent",
     role: "Follow-up",
-    prompt: "Determines if a call-back adds value. Generates numbered call script with opening, key questions, closing.",
-    output: "ApprovalItem: type=call",
+    prompt: "Determines if a call-back adds value. Generates numbered call script with opening, key questions, and closing. Suggests appointment slots.",
+    output: "ApprovalItem: type=call_script",
     color: "border-green-600 text-green-300",
   },
 ];
@@ -67,13 +74,13 @@ const SCHEMA_MODELS = [
   { name: "AgentRun", desc: "Pipeline execution per message" },
   { name: "ApprovalItem", desc: "Pending actions awaiting approval" },
   { name: "Task", desc: "Generated todo items" },
-  { name: "MenuItem", desc: "Menu catalog with pricing" },
-  { name: "InventoryItem", desc: "Stock levels + reorder thresholds" },
-  { name: "StaffShift", desc: "Staff availability calendar" },
-  { name: "Supplier", desc: "Supplier directory" },
+  { name: "Proposal", desc: "Pitch deck drafts" },
+  { name: "Invoice", desc: "Itemised invoice records" },
   { name: "Customer", desc: "Customer profiles + history" },
   { name: "Quote", desc: "Approved quote records" },
   { name: "Booking", desc: "Confirmed orders/events" },
+  { name: "Product", desc: "Product/service catalog" },
+  { name: "Staff", desc: "Staff directory" },
   { name: "AuditLog", desc: "Full action trail" },
 ];
 
@@ -103,7 +110,7 @@ export default function ArchitecturePage() {
           <h1 className="text-4xl md:text-5xl font-bold mb-4">How ServeOps AI Works</h1>
           <p className="text-slate-400 text-lg max-w-2xl leading-relaxed">
             A multi-agent AI pipeline built on Next.js, Neon Postgres, OpenRouter,
-            and a WhatsApp connector — all owner-gated via an approval queue.
+            and the official Meta WhatsApp Business Cloud API — all owner-gated via an approval queue.
           </p>
         </div>
 
@@ -113,10 +120,10 @@ export default function ArchitecturePage() {
           <div className="flex flex-col md:flex-row items-center gap-2 flex-wrap">
             {[
               { label: "WhatsApp", sub: "Customer message", icon: Smartphone, color: "bg-green-500/10 border-green-500/30 text-green-300" },
-              { label: "WAHA / Webhook", sub: "HTTP inbound", icon: Globe, color: "bg-slate-800 border-slate-600 text-slate-300" },
+              { label: "Meta Business API", sub: "Webhook / Cloud API", icon: Globe, color: "bg-slate-800 border-slate-600 text-slate-300" },
               { label: "Next.js API", sub: "/api/messages/inbound", icon: Zap, color: "bg-blue-500/10 border-blue-500/30 text-blue-300" },
               { label: "Router Agent", sub: "Classify & route", icon: Bot, color: "bg-emerald-500/10 border-emerald-500/30 text-emerald-300" },
-              { label: "5 AI Agents", sub: "Parallel execution", icon: Bot, color: "bg-purple-500/10 border-purple-500/30 text-purple-300" },
+              { label: "6 AI Agents", sub: "Parallel execution", icon: Bot, color: "bg-purple-500/10 border-purple-500/30 text-purple-300" },
               { label: "Approval Queue", sub: "Owner reviews", icon: Shield, color: "bg-amber-500/10 border-amber-500/30 text-amber-300" },
               { label: "Business Action", sub: "Send / Store / Alert", icon: Cloud, color: "bg-pink-500/10 border-pink-500/30 text-pink-300" },
             ].map((node, i, arr) => {
@@ -215,7 +222,8 @@ export default function ArchitecturePage() {
                 {[
                   "Every WhatsApp reply before it's sent",
                   "All generated quotes before delivery",
-                  "Supplier restock orders",
+                  "Proposal decks before sending to prospects",
+                  "Invoices before issuing to customers",
                   "Task creation on behalf of staff",
                   "Marketing promos and broadcasts",
                   "Phone call recommendations",
@@ -234,9 +242,10 @@ export default function ArchitecturePage() {
               </div>
               <ul className="space-y-2 text-sm text-slate-300">
                 {[
-                  "Reply type → WhatsApp message sent via WAHA",
+                  "Reply type → WhatsApp message sent via Meta API",
                   "Quote type → Quote record created + sent",
-                  "Restock type → Supplier contact surfaced",
+                  "Proposal type → Deck saved and ready to share",
+                  "Invoice type → Invoice record created + sent",
                   "Tasks type → Task records written to DB",
                   "Call type → Call script marked ready",
                   "Promo type → Broadcast draft saved",
@@ -265,11 +274,11 @@ export default function ArchitecturePage() {
               </thead>
               <tbody className="bg-slate-950">
                 {[
-                  ["WhatsApp connector", "WAHA self-hosted (demo number)", "Meta WhatsApp Business Cloud API"],
+                  ["WhatsApp connector", "Meta WhatsApp Business Cloud API (sandbox)", "Meta WhatsApp Business Cloud API (verified number)"],
                   ["LLM", "OpenRouter (Claude/Mistral)", "OpenRouter multi-model with fallback"],
                   ["DB", "Neon Postgres (serverless)", "Neon + read replica + connection pooling"],
                   ["Auth", "Single-tenant, no auth", "Clerk or NextAuth multi-tenant"],
-                  ["Deployment", "Railway (target)", "Railway / Cloud Run / Vercel"],
+                  ["Deployment", "Railway", "Railway / Cloud Run / Vercel"],
                   ["Multi-business", "Single demo tenant", "Per-business isolation, row-level security"],
                 ].map(([cap, proto, prod], i, arr) => (
                   <tr key={cap} className={i < arr.length - 1 ? "border-b border-slate-800/60" : ""}>
