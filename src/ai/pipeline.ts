@@ -64,16 +64,147 @@ function parseJsonObject(raw: string): object {
   }
 }
 
+function estimateValueFromMessage(messageBody: string): number {
+  const lower = messageBody.toLowerCase();
+
+  if (/\btuition\b|\btrial class\b|\bprimary\b|\bmath\b|\bregistration\b|\bstudent\b|\bparent\b/.test(lower)) {
+    return 480;
+  }
+
+  if (/\brenovation\b|\bbto\b|\bsite visit\b|\bkitchen\b|\bbathroom\b/.test(lower)) {
+    return 12000;
+  }
+
+  if (/\bbridal\b|\bfacial\b|\bmakeup\b|\bsalon\b|\bspa\b/.test(lower)) {
+    return 680;
+  }
+
+  if (/\bcafe\b|\blogo\b|\binstagram\b|\bwebsite\b|\bcampaign\b|\blaunch\b/.test(lower)) {
+    return 3200;
+  }
+
+  if (/\bcater\b|\blunch\b|\bpax\b|\bteam meal\b|\bdelivery\b/.test(lower)) {
+    return 720;
+  }
+
+  return 1500;
+}
+
+function demoPackageForMessage(messageBody: string) {
+  const lower = messageBody.toLowerCase();
+
+  if (/\btuition\b|\btrial class\b|\bprimary\b|\bmath\b|\bregistration\b|\bstudent\b|\bparent\b/.test(lower)) {
+    return {
+      packageName: "Primary 6 Math Trial and Registration Package",
+      lineItem: "Primary 6 Math tuition package - trial class, diagnostic review, and first month registration",
+      titlePrefix: "Tuition Trial and Registration Proposal",
+      solution: "We will help the parent evaluate fit through a trial class, clear fee structure, and simple registration flow.",
+      solutionBullets: ["Trial class booking", "Monthly lesson fee breakdown", "Registration and onboarding checklist"],
+      scopeBullets: [
+        "1 trial class for Primary 6 Math",
+        "Short diagnostic review after the class",
+        "Monthly fee and lesson schedule summary",
+        "Registration form and payment instructions",
+        "Parent WhatsApp follow-up template",
+        "Teacher notes for first lesson planning",
+      ],
+      timelineBullets: [
+        "Day 1: confirm student level and preferred trial slot",
+        "Weekend: conduct trial class and diagnostic review",
+        "Next day: send registration details and first-month invoice",
+      ],
+      paymentTerms: "Trial fee or 50% registration deposit upfront, balance before first month starts",
+      upsell: "Offer a 3-month PSLE preparation bundle after the trial class.",
+    };
+  }
+
+  if (/\brenovation\b|\bbto\b|\bsite visit\b|\bkitchen\b|\bbathroom\b/.test(lower)) {
+    return {
+      packageName: "BTO Renovation Site Visit and Concept Package",
+      lineItem: "BTO renovation package - site visit, concept plan, and preliminary quotation",
+      titlePrefix: "Renovation Proposal",
+      solution: "We will start with a site visit, clarify scope, and prepare a phased renovation estimate for owner approval.",
+      solutionBullets: ["Site visit scheduling", "Room-by-room scope planning", "Preliminary budget and timeline"],
+      scopeBullets: [
+        "On-site measurement and requirement check",
+        "Living room, kitchen, bedroom, and bathroom scope notes",
+        "Material and carpentry assumptions",
+        "Estimated project timeline",
+        "Preliminary quotation",
+        "Next-step consultation checklist",
+      ],
+      timelineBullets: [
+        "Day 1-2: confirm site visit slot",
+        "Week 1: site visit and measurements",
+        "Week 2: proposal, estimate, and revision discussion",
+      ],
+      paymentTerms: "Consultation deposit upfront, renovation deposit after final scope approval",
+      upsell: "Offer 3D visualisation as an add-on before final renovation sign-off.",
+    };
+  }
+
+  if (/\bbridal\b|\bfacial\b|\bmakeup\b|\bsalon\b|\bspa\b/.test(lower)) {
+    return {
+      packageName: "Bridal Beauty Consultation and Deposit Package",
+      lineItem: "Bridal facial and makeup package - consultation, treatment plan, and booking deposit",
+      titlePrefix: "Bridal Beauty Package Proposal",
+      solution: "We will recommend suitable bridal beauty options, schedule a consultation, and reserve the package with a deposit.",
+      solutionBullets: ["Consultation booking", "Package recommendation", "Deposit invoice and appointment plan"],
+      scopeBullets: [
+        "Bridal facial consultation",
+        "Makeup package recommendation",
+        "Treatment timeline before event date",
+        "Appointment booking support",
+        "Deposit and balance payment schedule",
+        "WhatsApp confirmation message",
+      ],
+      timelineBullets: [
+        "Day 1: confirm wedding month and skin concerns",
+        "Week 1: consultation and package selection",
+        "After approval: reserve appointment with deposit",
+      ],
+      paymentTerms: "50% deposit to reserve package, balance due before appointment",
+      upsell: "Offer mother-of-bride or bridesmaid makeup add-ons.",
+    };
+  }
+
+  return {
+    packageName: "Brand Launch Starter Package",
+    lineItem: "Brand Launch Starter Package - logo, launch campaign, and one-page website",
+    titlePrefix: "Growth Launch Proposal",
+    solution: "We will package the launch into a focused brand, content, and website sprint with owner approval at each milestone.",
+    solutionBullets: ["Logo direction and visual identity kit", "Launch campaign plan with ready-to-post content", "One-page website with contact and WhatsApp CTA"],
+    scopeBullets: [
+      "2 logo concepts with 2 revision rounds",
+      "10 Instagram launch posts and caption drafts",
+      "Responsive landing page copy and layout",
+      "WhatsApp inquiry response template",
+      "Basic launch checklist for opening week",
+      "Final files exported for web and social use",
+    ],
+    timelineBullets: [
+      "Week 1: discovery, brand direction, and content pillars",
+      "Week 2: logo concepts, website copy, and campaign calendar",
+      "Week 3: final design, landing page build, and revisions",
+      "Week 4: launch handover, QA, and WhatsApp follow-up setup",
+    ],
+    paymentTerms: "50% upfront, 50% before final launch handover",
+    upsell: "Offer a monthly social content retainer after launch week.",
+  };
+}
+
 function fallbackRouterOutput(messageBody: string): RouterOutput {
   const lower = messageBody.toLowerCase();
-  const asksForInvoice = /\binvoice\b|\bbill\b|\bdeposit\b|\bpayment\b|\bpay\b/.test(lower);
-  const asksForProposal = /\bproposal\b|\bdeck\b|\bpitch\b|\bquote\b|\bpricing\b|\bpackage\b|\bwebsite\b|\bcampaign\b|\blaunch\b/.test(lower);
-  const wantsCall = /\bcall\b|\bappointment\b|\bschedule\b|\bmeet\b|\bthis week\b/.test(lower);
+  const asksForPricing = /\bfee\b|\bfees\b|\bprice\b|\bpricing\b|\bcost\b|\bcosts\b|\brate\b|\brates\b|\bquote\b|\bestimate\b|\bpackage\b|\bpackages\b/.test(lower);
+  const asksForInvoice = /\binvoice\b|\bbill\b|\bdeposit\b|\bpayment\b|\bpay\b|\bregistration\b|\bsign up\b|\benrol\b|\benroll\b|\bdecide to start\b/.test(lower);
+  const asksForProposal = asksForPricing || /\bproposal\b|\bdeck\b|\bpitch\b|\bwebsite\b|\bcampaign\b|\blaunch\b|\btrial class\b|\btuition\b|\bsite visit\b|\bconsultation\b|\bbridal\b/.test(lower);
+  const wantsCall = /\bcall\b|\bappointment\b|\bschedule\b|\bmeet\b|\bthis week\b|\btrial class\b|\bsite visit\b|\bconsultation\b/.test(lower);
+  const estimatedValue = estimateValueFromMessage(messageBody);
 
   return {
     intent: asksForProposal ? "quote_request" : "service_inquiry",
     urgency: asksForProposal || asksForInvoice ? "high" : "normal",
-    estimatedValue: 3200,
+    estimatedValue,
     currency: "SGD",
     summary: `Customer needs SME services: ${extractCustomerNeed(messageBody)}`,
     customerType: "new_lead",
@@ -93,6 +224,43 @@ function fallbackRouterOutput(messageBody: string): RouterOutput {
   };
 }
 
+function normalizeRouterOutput(routerOutput: RouterOutput, messageBody: string): RouterOutput {
+  const inferred = fallbackRouterOutput(messageBody);
+  const estimatedValue = Number(routerOutput.estimatedValue ?? 0);
+
+  return {
+    ...routerOutput,
+    estimatedValue: estimatedValue > 0 ? estimatedValue : inferred.estimatedValue,
+    currency: routerOutput.currency || inferred.currency,
+    urgency: routerOutput.urgency === "high" || inferred.urgency === "high" ? "high" : routerOutput.urgency || inferred.urgency,
+    agents: Array.from(new Set([...(routerOutput.agents ?? []), ...inferred.agents])),
+    missingInfo: Array.from(new Set([...(routerOutput.missingInfo ?? []), ...inferred.missingInfo])).slice(0, 6),
+    notes: [routerOutput.notes, inferred.notes].filter(Boolean).join(" "),
+  };
+}
+
+function hasWeakMoneyResult(type: string, result: object, routerOutput: RouterOutput): boolean {
+  const body = result as Record<string, unknown>;
+  const expectedValue = Number(routerOutput.estimatedValue ?? 0);
+  const minimumUsefulValue = expectedValue > 0 ? expectedValue * 0.75 : 1;
+
+  if (type === "sales") {
+    const quote = body.quote as { totalSgd?: unknown } | undefined;
+    return Number(quote?.totalSgd ?? 0) < minimumUsefulValue;
+  }
+
+  if (type === "proposal") {
+    const pricing = body.pricingSummary as { totalSgd?: unknown } | undefined;
+    return Number(pricing?.totalSgd ?? 0) < minimumUsefulValue;
+  }
+
+  if (type === "invoice") {
+    return Number(body.totalSgd ?? 0) < minimumUsefulValue;
+  }
+
+  return false;
+}
+
 function fallbackAgentResult(
   type: string,
   messageBody: string,
@@ -103,6 +271,7 @@ function fallbackAgentResult(
   const clientPhone = customer?.phone || "+65 demo";
   const clientBusiness = extractBusinessName(messageBody, customer);
   const need = extractCustomerNeed(messageBody);
+  const demoPackage = demoPackageForMessage(messageBody);
   const totalSgd = routerOutput.estimatedValue > 0 ? routerOutput.estimatedValue : 3200;
   const depositSgd = totalSgd / 2;
   const validUntil = addDays(7);
@@ -111,7 +280,7 @@ function fallbackAgentResult(
   if (type === "proposal") {
     return {
       type: "proposal",
-      title: `Growth Launch Proposal for ${clientBusiness}`,
+      title: `${demoPackage.titlePrefix} for ${clientBusiness}`,
       priority: "high",
       client: {
         name: clientName,
@@ -138,7 +307,7 @@ function fallbackAgentResult(
         {
           slideNumber: 2,
           title: "Understanding Your Goals",
-          content: `${clientBusiness} needs a practical launch package that can attract customers quickly and look credible from day one.`,
+          content: `${clientBusiness} needs a practical package that answers the customer's request clearly and helps them decide the next step with confidence.`,
           bullets: [
             "Create a clear brand identity customers can recognise",
             "Prepare launch content for Instagram and WhatsApp",
@@ -148,53 +317,37 @@ function fallbackAgentResult(
         {
           slideNumber: 3,
           title: "Our Solution",
-          content: "We will package the launch into a focused brand, content, and website sprint with owner approval at each milestone.",
-          bullets: [
-            "Logo direction and visual identity kit",
-            "Launch campaign plan with ready-to-post content",
-            "One-page website with contact and WhatsApp CTA",
-          ],
+          content: demoPackage.solution,
+          bullets: demoPackage.solutionBullets,
         },
         {
           slideNumber: 4,
           title: "Scope & Deliverables",
           content: "The package is designed for a small team that needs speed, clarity, and reusable assets.",
-          bullets: [
-            "2 logo concepts with 2 revision rounds",
-            "10 Instagram launch posts and caption drafts",
-            "Responsive landing page copy and layout",
-            "WhatsApp inquiry response template",
-            "Basic launch checklist for opening week",
-            "Final files exported for web and social use",
-          ],
+          bullets: demoPackage.scopeBullets,
         },
         {
           slideNumber: 5,
           title: "Timeline",
-          content: "A four-week delivery plan keeps the launch controlled without slowing the owner down.",
-          bullets: [
-            "Week 1: discovery, brand direction, and content pillars",
-            "Week 2: logo concepts, website copy, and campaign calendar",
-            "Week 3: final design, landing page build, and revisions",
-            "Week 4: launch handover, QA, and WhatsApp follow-up setup",
-          ],
+          content: "A simple staged timeline keeps the owner and customer aligned before payment or delivery starts.",
+          bullets: demoPackage.timelineBullets,
         },
         {
           slideNumber: 6,
           title: "Investment",
           content: "A simple package with clear payment terms so the project can start quickly.",
           bullets: [
-            `Brand Launch Starter Package: SGD ${totalSgd.toLocaleString()}`,
+            `${demoPackage.packageName}: SGD ${totalSgd.toLocaleString()}`,
             `Deposit to start: SGD ${depositSgd.toLocaleString()}`,
-            "Balance due before final launch handover",
+            demoPackage.paymentTerms,
           ],
         },
       ],
       pricingSummary: {
-        packageName: "Brand Launch Starter Package",
+        packageName: demoPackage.packageName,
         totalSgd,
         depositSgd,
-        paymentTerms: "50% upfront, 50% before final launch handover",
+        paymentTerms: demoPackage.paymentTerms,
         notes: "Prices exclude GST unless otherwise stated.",
       },
       nextSteps: [
@@ -202,7 +355,7 @@ function fallbackAgentResult(
         "Schedule a 30-minute discovery call this week",
         "Approve the deposit invoice so the launch sprint can begin",
       ],
-      whatsappMessage: `Hi ${clientName}, I prepared a launch proposal for ${clientBusiness} with the package, timeline, and pricing. Please review it and share a good time for a quick call this week.`,
+      whatsappMessage: `Hi ${clientName}, I prepared a proposal for ${clientBusiness} with the package, timeline, and pricing. Please review it and share a good time for a quick call this week.`,
       notes: "Generated by fallback proposal flow to keep the live demo reliable.",
     };
   }
@@ -210,7 +363,7 @@ function fallbackAgentResult(
   if (type === "invoice") {
     return {
       type: "invoice",
-      title: `Deposit Invoice for ${clientBusiness} - Brand Launch Starter Package`,
+      title: `Deposit Invoice for ${clientBusiness} - ${demoPackage.packageName}`,
       priority: "high",
       invoiceNumber: `INV-${new Date().getFullYear()}-001`,
       status: "draft",
@@ -229,7 +382,7 @@ function fallbackAgentResult(
       },
       lineItems: [
         {
-          description: "Brand Launch Starter Package - logo, launch campaign, and one-page website",
+          description: demoPackage.lineItem,
           qty: 1,
           unitPrice: totalSgd,
           subtotal: totalSgd,
@@ -243,7 +396,7 @@ function fallbackAgentResult(
       balanceDueSgd: totalSgd - depositSgd,
       paymentInstructions: "PayNow / bank transfer. Reference invoice number when making payment.",
       notes: "Draft invoice for owner approval before sending to customer.",
-      whatsappMessage: `Hi ${clientName}, here is the draft deposit invoice for the Brand Launch Starter Package. The deposit is SGD ${depositSgd.toLocaleString()} to start, with the balance due before final handover.`,
+      whatsappMessage: `Hi ${clientName}, here is the draft deposit invoice for the ${demoPackage.packageName}. The deposit is SGD ${depositSgd.toLocaleString()} to start, with the balance due before final handover.`,
     };
   }
 
@@ -260,19 +413,19 @@ function fallbackAgentResult(
         { date: addDays(3), time: "10:00", label: "Next available morning 10am" },
       ],
       script: {
-        opening: `Hi ${clientName}, this is BrightLane Studio. I saw your message about ${clientBusiness} and wanted to quickly understand your launch timeline.`,
+        opening: `Hi ${clientName}, this is BrightLane Studio. I saw your message about ${clientBusiness} and wanted to quickly understand what you need and the timing.`,
         keyPoints: [
-          "Confirm the opening or campaign launch date",
-          "Clarify whether logo, Instagram, and website are all needed before launch",
+          "Confirm the exact requirement and preferred timing",
+          `Walk through the ${demoPackage.packageName}`,
           "Confirm budget comfort and deposit timing",
-          "Agree on the next approval step after the proposal",
+          "Agree on the next approval step after the proposal or invoice",
         ],
         objectionHandlers: {
           "too expensive": "We can split the package into launch-critical items first, then phase the remaining assets after opening.",
           "need more time": "No problem. I can keep the proposal valid for seven days and we can lock the timeline once you are ready.",
           "not sure yet": "That is fair. I can send a short package summary and we can decide after a 15-minute call.",
         },
-        closing: "Great, I will send the proposal deck and draft deposit invoice here on WhatsApp for your review.",
+        closing: "Great, I will send the proposal and draft deposit invoice here on WhatsApp for your review.",
       },
       notes: "Owner should call before sending the invoice if the customer has not fully confirmed scope.",
     };
@@ -324,12 +477,12 @@ function fallbackAgentResult(
     type: "quote",
     title: `Quote Reply for ${clientBusiness}`,
     priority: "high",
-    whatsappReply: `Hi ${clientName}, thanks for sharing the details for ${clientBusiness}. I can help with a Brand Launch Starter Package covering logo, Instagram launch content, and a simple website. I will send a proposal deck and draft deposit invoice for your review, then we can jump on a quick call to finalise scope.`,
+    whatsappReply: `Hi ${clientName}, thanks for sharing the details for ${clientBusiness}. I can help with the ${demoPackage.packageName}. I will send a proposal and draft deposit invoice for your review, then we can jump on a quick call to finalise scope.`,
     leadScore: "hot",
     leadSummary: `${clientName} is asking for launch support and pricing for ${clientBusiness}.`,
     quote: {
       items: [
-        { name: "Brand Launch Starter Package", qty: 1, unitPriceSgd: totalSgd, subtotalSgd: totalSgd },
+        { name: demoPackage.packageName, qty: 1, unitPriceSgd: totalSgd, subtotalSgd: totalSgd },
       ],
       subtotalSgd: totalSgd,
       gstSgd: 0,
@@ -337,7 +490,7 @@ function fallbackAgentResult(
       notes: "Excludes GST unless BrightLane Studio confirms GST registration.",
       validUntil,
     },
-    upsellSuggestion: "Offer a monthly social content retainer after launch week.",
+    upsellSuggestion: demoPackage.upsell,
     notes: "High-intent SME lead. Recommend a personal follow-up call before sending final invoice.",
   };
 }
@@ -435,22 +588,23 @@ export async function runFullPipeline(
       routerOutput = fallbackRouterOutput(messageBody);
     }
 
+    routerOutput = normalizeRouterOutput(routerOutput, messageBody);
+
     await prisma.agentRun.update({
       where: { id: agentRun.id },
       data: { routerOutput: routerOutput as object },
     });
 
-    const inferredAgents = fallbackRouterOutput(messageBody).agents;
-    const agentsToRun = Array.from(
-      new Set([...(routerOutput.agents ?? []), ...inferredAgents].filter((a) => AGENT_PROMPT_MAP[a]))
-    );
+    const agentsToRun = Array.from(new Set((routerOutput.agents ?? []).filter((a) => AGENT_PROMPT_MAP[a])));
 
     const agentResults = await Promise.all(
       agentsToRun.map(async (type) => {
         try {
           return {
             type,
-            result: await runAgent(AGENT_PROMPT_MAP[type], messageBody, businessContext, routerOutput),
+            result: await runAgent(AGENT_PROMPT_MAP[type], messageBody, businessContext, routerOutput).then((result) =>
+              hasWeakMoneyResult(type, result, routerOutput) ? fallbackAgentResult(type, messageBody, routerOutput, customer) : result
+            ),
           };
         } catch (error) {
           console.error(`${type} agent fallback used:`, error);
