@@ -561,20 +561,79 @@ function BusinessScenarioModal({
   onApply: () => void;
   onClose: () => void;
 }) {
+  const [suggesting, setSuggesting] = useState<"all" | "business" | "customer" | keyof BusinessProfileForm | keyof typeof DEFAULT_CUSTOM_SCENARIO | null>(null);
+  const [suggestError, setSuggestError] = useState("");
+
+  async function generateScenario() {
+    const res = await fetch("/api/scenarios/suggest", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        businessName: form.businessName,
+        industry: form.industry,
+        current: {
+          ...form,
+          customer: customScenario,
+        },
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Unable to generate scenario");
+    return data.scenario as {
+      business: BusinessProfileForm;
+      customer: typeof DEFAULT_CUSTOM_SCENARIO;
+    };
+  }
+
   function fillFullScenario() {
     const suggestion = pickDemoSuggestion();
     setForm(suggestion.business);
     setCustomScenario(suggestion.customer);
   }
 
-  function suggestBusinessField(field: keyof BusinessProfileForm) {
-    const suggestion = pickDemoSuggestion();
-    setForm({ ...form, [field]: suggestion.business[field] });
+  async function fillWithLLM() {
+    setSuggesting("all");
+    setSuggestError("");
+    try {
+      const scenario = await generateScenario();
+      setForm({ ...form, ...scenario.business });
+      setCustomScenario({ ...customScenario, ...scenario.customer });
+    } catch {
+      fillFullScenario();
+      setSuggestError("LLM suggestion failed, so a local demo scenario was filled instead.");
+    } finally {
+      setSuggesting(null);
+    }
   }
 
-  function suggestCustomerField(field: keyof typeof DEFAULT_CUSTOM_SCENARIO) {
-    const suggestion = pickDemoSuggestion();
-    setCustomScenario({ ...customScenario, [field]: suggestion.customer[field] });
+  async function suggestBusinessField(field: keyof BusinessProfileForm) {
+    setSuggesting(field);
+    setSuggestError("");
+    try {
+      const scenario = await generateScenario();
+      setForm({ ...form, [field]: scenario.business[field] });
+    } catch {
+      const suggestion = pickDemoSuggestion();
+      setForm({ ...form, [field]: suggestion.business[field] });
+      setSuggestError("LLM suggestion failed, so a local suggestion was used.");
+    } finally {
+      setSuggesting(null);
+    }
+  }
+
+  async function suggestCustomerField(field: keyof typeof DEFAULT_CUSTOM_SCENARIO) {
+    setSuggesting(field);
+    setSuggestError("");
+    try {
+      const scenario = await generateScenario();
+      setCustomScenario({ ...customScenario, [field]: scenario.customer[field] });
+    } catch {
+      const suggestion = pickDemoSuggestion();
+      setCustomScenario({ ...customScenario, [field]: suggestion.customer[field] });
+      setSuggestError("LLM suggestion failed, so a local suggestion was used.");
+    } finally {
+      setSuggesting(null);
+    }
   }
 
   return (
@@ -593,11 +652,20 @@ function BusinessScenarioModal({
           </div>
           <div className="flex flex-wrap gap-2">
             <button
-              onClick={fillFullScenario}
+              onClick={fillWithLLM}
+              disabled={!!suggesting}
               className="flex items-center gap-2 rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-3 py-2 text-xs font-bold text-cyan-200 hover:bg-cyan-500/20"
             >
-              <Wand2 className="h-4 w-4" />
-              Fill random demo
+              {suggesting === "all" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}
+              {suggesting === "all" ? "Generating..." : "AI suggest scenario"}
+            </button>
+            <button
+              onClick={fillFullScenario}
+              disabled={!!suggesting}
+              className="flex items-center gap-2 rounded-xl border border-slate-700 px-3 py-2 text-xs font-bold text-slate-300 hover:border-slate-500 hover:text-white"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Local demo
             </button>
             <button
               onClick={onClose}
@@ -609,6 +677,11 @@ function BusinessScenarioModal({
         </header>
 
         <div className="min-h-0 flex-1 overflow-y-auto p-5">
+          {suggestError ? (
+            <div className="mb-4 rounded-xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-xs text-amber-100">
+              {suggestError}
+            </div>
+          ) : null}
           <div className="grid gap-5">
             <BusinessSetupPanel
               form={form}
