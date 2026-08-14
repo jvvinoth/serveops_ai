@@ -17,9 +17,22 @@ import {
 } from "lucide-react";
 
 export const metadata = {
-  title: "ServeOps AI — AI Operating Team for Any SME",
+  title: "ServeOps AI — AI Operating Team for SMEs",
   description:
-    "ServeOps AI turns WhatsApp messages into quotes, proposals, invoices, and owner-approved actions. Built for any SME — agencies, F&B, insurance, renovation, tuition, salons.",
+    "ServeOps AI turns WhatsApp customer messages into quotes, proposal decks, invoices, voice call plans, and owner-approved follow-up tasks for any SME.",
+  openGraph: {
+    title: "ServeOps AI — AI Operating Team for SMEs",
+    description:
+      "Turn WhatsApp customer messages into quotes, proposal decks, invoices, voice call plans, and owner-approved business actions.",
+    images: ["/serveops-og.png"],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "ServeOps AI — AI Operating Team for SMEs",
+    description:
+      "Turn WhatsApp customer messages into quotes, proposal decks, invoices, voice call plans, and owner-approved business actions.",
+    images: ["/serveops-og.png"],
+  },
 };
 
 const AGENTS = [
