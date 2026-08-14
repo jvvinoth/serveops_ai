@@ -660,6 +660,112 @@ function fallbackAgentResult(
   };
 }
 
+function normalizeAgentResult(
+  type: string,
+  result: object,
+  messageBody: string,
+  routerOutput: RouterOutput,
+  customer?: CustomerContext,
+  businessProfile?: BusinessProfile
+): Record<string, unknown> {
+  const body = { ...(result as Record<string, unknown>) };
+  const clientName = customer?.name || "Customer";
+  const clientPhone = customer?.phone || "+65 demo";
+  const demoPackage = demoPackageForMessage(messageBody, businessProfile);
+  const profilePricing = estimatePricingFromMessage(messageBody, businessProfile);
+  const providerName = businessProfile?.businessName || "ServeOps Demo Business";
+  const totalSgd = Number(routerOutput.estimatedValue ?? 0);
+  const depositSgd = totalSgd / 2;
+
+  if (type === "sales") {
+    body.title = `${demoPackage.packageName} Quote for ${clientName}`;
+    body.leadSummary = `${clientName} is asking about ${demoPackage.packageName}.`;
+    body.quote = {
+      ...((body.quote as Record<string, unknown>) ?? {}),
+      items: [
+        {
+          name: demoPackage.packageName,
+          qty: profilePricing?.qty ?? 1,
+          unitPriceSgd: profilePricing?.unitPrice ?? totalSgd,
+          subtotalSgd: totalSgd,
+        },
+      ],
+      subtotalSgd: totalSgd,
+      gstSgd: 0,
+      totalSgd,
+    };
+  }
+
+  if (type === "proposal") {
+    body.title = `${demoPackage.titlePrefix} for ${clientName}`;
+    body.client = {
+      ...((body.client as Record<string, unknown>) ?? {}),
+      name: clientName,
+      business: customer?.company || clientName,
+      requirement: extractCustomerNeed(messageBody),
+    };
+    body.proposedBy = {
+      ...((body.proposedBy as Record<string, unknown>) ?? {}),
+      business: providerName,
+    };
+    body.pricingSummary = {
+      ...((body.pricingSummary as Record<string, unknown>) ?? {}),
+      packageName: demoPackage.packageName,
+      totalSgd,
+      depositSgd,
+      paymentTerms: demoPackage.paymentTerms,
+    };
+  }
+
+  if (type === "invoice") {
+    body.title = `Invoice for ${clientName} — ${demoPackage.packageName}`;
+    body.billFrom = {
+      ...((body.billFrom as Record<string, unknown>) ?? {}),
+      businessName: providerName,
+      address: "Singapore",
+    };
+    body.billTo = {
+      ...((body.billTo as Record<string, unknown>) ?? {}),
+      name: clientName,
+      businessName: customer?.company || "",
+      phone: clientPhone,
+    };
+    body.lineItems = [
+      {
+        description: demoPackage.lineItem,
+        qty: profilePricing?.qty ?? 1,
+        unitPrice: profilePricing?.unitPrice ?? totalSgd,
+        subtotal: totalSgd,
+      },
+    ];
+    body.subtotalSgd = totalSgd;
+    body.discountSgd = 0;
+    body.gstSgd = 0;
+    body.totalSgd = totalSgd;
+    body.depositDueSgd = depositSgd;
+    body.balanceDueSgd = totalSgd - depositSgd;
+    body.paymentInstructions = businessProfile?.paymentTerms || "PayNow / bank transfer. Reference invoice number when making payment.";
+  }
+
+  if (type === "call") {
+    body.title = `Call Plan for ${clientName} — ${demoPackage.packageName}`;
+    const script = ((body.script as Record<string, unknown>) ?? {}) as Record<string, unknown>;
+    body.script = {
+      ...script,
+      opening:
+        typeof script.opening === "string" && script.opening.trim()
+          ? script.opening.replace(/\bKopi\s*&\s*Bowl(?:\s*Cafe)?\b/gi, providerName)
+          : `Hi ${clientName}, this is ${providerName}. I saw your WhatsApp message and wanted to help confirm the details.`,
+    };
+  }
+
+  if (type === "admin") {
+    body.title = `Follow-up Tasks for ${clientName} — ${demoPackage.packageName}`;
+  }
+
+  return body;
+}
+
 async function runAgent(
   promptFile: string,
   messageBody: string,
@@ -773,17 +879,26 @@ export async function runFullPipeline(
     const agentResults = await Promise.all(
       agentsToRun.map(async (type) => {
         try {
+          const rawResult = await runAgent(AGENT_PROMPT_MAP[type], messageBody, businessContext, routerOutput);
+          const stableResult = hasWeakMoneyResult(type, rawResult, routerOutput)
+            ? fallbackAgentResult(type, messageBody, routerOutput, customer, businessProfile)
+            : rawResult;
           return {
             type,
-            result: await runAgent(AGENT_PROMPT_MAP[type], messageBody, businessContext, routerOutput).then((result) =>
-              hasWeakMoneyResult(type, result, routerOutput) ? fallbackAgentResult(type, messageBody, routerOutput, customer, businessProfile) : result
-            ),
+            result: normalizeAgentResult(type, stableResult, messageBody, routerOutput, customer, businessProfile),
           };
         } catch (error) {
           console.error(`${type} agent fallback used:`, error);
           return {
             type,
-            result: fallbackAgentResult(type, messageBody, routerOutput, customer, businessProfile),
+            result: normalizeAgentResult(
+              type,
+              fallbackAgentResult(type, messageBody, routerOutput, customer, businessProfile),
+              messageBody,
+              routerOutput,
+              customer,
+              businessProfile
+            ),
           };
         }
       })
@@ -799,7 +914,7 @@ export async function runFullPipeline(
             agentType: type,
             type: (body.type as string) || type,
             title: (body.title as string) || `${type} recommendation`,
-            body: result,
+            body: result as object,
             priority: (body.priority as string) || "normal",
           },
         }),
@@ -808,7 +923,7 @@ export async function runFullPipeline(
             agentRunId: agentRun.id,
             type: (body.type as string) || type,
             title: (body.title as string) || `${type} recommendation`,
-            content: result,
+            content: result as object,
             status: "pending",
           },
         }),

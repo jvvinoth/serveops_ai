@@ -2004,6 +2004,7 @@ export default function LiveSimulatorPage() {
         body: JSON.stringify({
           phone: selected.phone,
           name: selected.name,
+          company: selected.company,
           message: messageToSend,
           source: "simulator",
           businessProfile,

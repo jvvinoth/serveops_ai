@@ -7,7 +7,7 @@ import { BUSINESS_ID } from "@/lib/utils";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { phone, name, message, source = "whatsapp" } = body;
+    const { phone, name, company, message, source = "whatsapp" } = body;
     const businessProfile = body.businessProfile as BusinessProfile | undefined;
 
     if (!phone || !message) {
@@ -25,6 +25,15 @@ export async function POST(req: NextRequest) {
           businessId: BUSINESS_ID,
           name: name || phone,
           phone,
+          company: company || null,
+        },
+      });
+    } else if ((name && customer.name !== name) || (company && customer.company !== company)) {
+      customer = await prisma.customer.update({
+        where: { id: customer.id },
+        data: {
+          ...(name ? { name } : {}),
+          ...(company ? { company } : {}),
         },
       });
     }
