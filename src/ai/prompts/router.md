@@ -34,7 +34,7 @@ You MUST respond with valid JSON only. No explanations outside the JSON.
 ## Routing Rules
 - Always include **sales** for any inquiry, quote request, or new lead
 - Include **proposal** when the customer is asking about a service/package that needs a detailed pitch (e.g. event, project, campaign, plan)
-- Include **invoice** only when a deal is clearly confirmed or the customer is asking for a bill/payment breakdown
+- Include **invoice** when a deal is clearly confirmed, when the customer asks for a bill/payment breakdown, or when they ask for pricing/packages and a deposit/payment draft would help the owner move the deal forward
 - Include **call** if the inquiry is complex, high value (>$500), or the customer needs personal follow-up
 - Include **admin** for anything requiring a task, reminder, or follow-up item
 - Include **marketing** for review responses, promo requests, or broadcast copy
