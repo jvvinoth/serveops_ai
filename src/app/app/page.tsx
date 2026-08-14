@@ -2,6 +2,12 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
+  BarVisualizer,
+  LiveKitRoom,
+  RoomAudioRenderer,
+  useVoiceAssistant,
+} from "@livekit/components-react";
+import {
   ArrowLeft,
   Bot,
   Briefcase,
@@ -805,7 +811,7 @@ function DeliverableCard({
             className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-white px-3 py-2 text-xs font-bold text-slate-950 hover:bg-slate-200"
           >
             <Phone className="h-3.5 w-3.5" />
-            Simulate Call Agent
+            Start Live Call Agent
           </button>
         </div>
       )}
@@ -892,16 +898,60 @@ function DeliverableCard({
   );
 }
 
-function CallSimulationModal({
+type LiveCallData = {
+  url: string;
+  token: string;
+  room: string;
+  metadata: Record<string, unknown>;
+};
+
+function VoiceAssistantPanel({ selected, profile }: { selected: ContactScenario; profile: BusinessProfile }) {
+  const { state, audioTrack } = useVoiceAssistant();
+  const label =
+    state === "connecting" || state === "initializing"
+      ? "Connecting..."
+      : state === "listening"
+        ? "Listening..."
+        : state === "thinking"
+          ? "Thinking..."
+          : state === "speaking"
+            ? "Speaking..."
+            : "On call";
+
+  return (
+    <>
+      <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-cyan-500 to-emerald-500 text-2xl font-bold">
+        {selected.avatar}
+      </div>
+      <div className="text-xl font-bold">{selected.name}</div>
+      <div className="mt-1 text-xs text-slate-400">{selected.phone}</div>
+      <div className="mt-2 text-xs text-cyan-200">{profile.businessName} voice agent</div>
+      <div className="mt-6 rounded-full bg-cyan-500/10 px-3 py-2 text-sm font-semibold text-cyan-200">
+        {label}
+      </div>
+      <div className="mt-6 flex justify-center">
+        <BarVisualizer
+          state={state}
+          barCount={7}
+          trackRef={audioTrack}
+          style={{ height: 92, width: 190 }}
+        />
+      </div>
+      <div className="mt-6 text-xs leading-relaxed text-slate-500">
+        Speak naturally. The agent confirms the enquiry, offers slots, and records the outcome back into ServeOps.
+      </div>
+    </>
+  );
+}
+
+function ScriptFallbackPanel({
   item,
   selected,
   profile,
-  onClose,
 }: {
   item: ApprovalItem;
   selected: ContactScenario;
   profile: BusinessProfile;
-  onClose: () => void;
 }) {
   const [step, setStep] = useState(0);
   const content = item.content ?? {};
@@ -927,15 +977,109 @@ function CallSimulationModal({
   const complete = step >= transcript.length;
 
   return (
+    <div>
+      <div className="mb-3 rounded-2xl border border-amber-500/20 bg-amber-500/10 p-4">
+        <div className="text-sm font-bold text-amber-200">Voice fallback transcript</div>
+        <p className="mt-1 text-xs leading-relaxed text-amber-100/80">
+          LiveKit keys are not connected in this environment. This backup keeps the demo path visible while the real voice worker is configured.
+        </p>
+      </div>
+
+      <div className="mb-3 rounded-2xl border border-slate-800 bg-slate-900 p-4">
+        <div className="text-[11px] font-bold uppercase tracking-wide text-slate-500">Call goal</div>
+        <p className="mt-1 text-sm leading-relaxed text-slate-300">
+          {String(content.reason ?? "Confirm customer requirement, answer key questions, and reserve the next appointment or payment step.")}
+        </p>
+      </div>
+
+      <div className="space-y-3">
+        {transcript.slice(0, Math.max(1, step)).map((line, index) => (
+          <div key={`${line.speaker}-${index}`} className="rounded-2xl border border-slate-800 bg-slate-900 p-4">
+            <div className={`mb-1 text-xs font-bold ${line.speaker === "AI Call Agent" ? "text-cyan-300" : "text-emerald-300"}`}>
+              {line.speaker}
+            </div>
+            <p className="text-sm leading-relaxed text-slate-200">{line.text}</p>
+          </div>
+        ))}
+      </div>
+
+      {complete && (
+        <div className="mt-4 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-4">
+          <div className="flex items-center gap-2 text-sm font-bold text-emerald-200">
+            <CheckCircle2 className="h-4 w-4" />
+            Appointment outcome created
+          </div>
+          <p className="mt-1 text-xs leading-relaxed text-emerald-100/80">
+            Slot reserved: {chosenSlot}. Owner should approve the generated invoice/proposal before sending final confirmation.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function LiveCallAgentModal({
+  item,
+  selected,
+  profile,
+  onClose,
+}: {
+  item: ApprovalItem;
+  selected: ContactScenario;
+  profile: BusinessProfile;
+  onClose: () => void;
+}) {
+  const [call, setCall] = useState<LiveCallData | null>(null);
+  const [error, setError] = useState("");
+  const [missing, setMissing] = useState<string[]>([]);
+  const [starting, setStarting] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+
+    async function startCall() {
+      setStarting(true);
+      setError("");
+      setMissing([]);
+      try {
+        const res = await fetch("/api/calls/start", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            approvalItemId: item.id,
+            businessProfile: profile,
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          setError(String(data.error || "Unable to start LiveKit call"));
+          setMissing(Array.isArray(data.missing) ? data.missing : []);
+          return;
+        }
+        if (active) setCall(data);
+      } catch {
+        if (active) setError("Unable to start LiveKit call");
+      } finally {
+        if (active) setStarting(false);
+      }
+    }
+
+    void startCall();
+    return () => {
+      active = false;
+    };
+  }, [item.id, profile]);
+
+  return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-      <section className="w-full max-w-3xl overflow-hidden rounded-3xl border border-slate-700 bg-slate-950 text-white shadow-2xl">
+      <section className="w-full max-w-4xl overflow-hidden rounded-3xl border border-slate-700 bg-slate-950 text-white shadow-2xl">
         <header className="flex items-center justify-between border-b border-slate-800 bg-slate-900 px-5 py-4">
           <div className="flex items-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-cyan-500/15 text-cyan-200">
               <Phone className="h-5 w-5" />
             </div>
             <div>
-              <h2 className="text-lg font-bold">Call Agent Simulation</h2>
+              <h2 className="text-lg font-bold">Live Voice Call Agent</h2>
               <p className="text-xs text-slate-500">{profile.businessName} calling {selected.name}</p>
             </div>
           </div>
@@ -944,58 +1088,95 @@ function CallSimulationModal({
           </button>
         </header>
 
-        <div className="grid gap-5 p-5 md:grid-cols-[260px_minmax(0,1fr)]">
+        <div className="grid gap-5 p-5 md:grid-cols-[290px_minmax(0,1fr)]">
           <div className="rounded-[2.2rem] border border-slate-700 bg-black p-3">
-            <div className="rounded-[1.8rem] bg-[#101820] px-5 py-8 text-center">
-              <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-cyan-500 to-emerald-500 text-2xl font-bold">
-                {selected.avatar}
-              </div>
-              <div className="text-xl font-bold">{selected.name}</div>
-              <div className="mt-1 text-xs text-slate-400">{selected.phone}</div>
-              <div className="mt-6 rounded-full bg-cyan-500/10 px-3 py-2 text-sm font-semibold text-cyan-200">
-                {complete ? "Call completed" : "On call..."}
-              </div>
-              <div className="mt-6 flex justify-center gap-1.5">
-                {[0, 1, 2, 3, 4].map((bar) => (
-                  <span
-                    key={bar}
-                    className={`h-12 w-2 rounded-full bg-cyan-300 ${!complete ? "animate-pulse" : "opacity-40"}`}
-                    style={{ animationDelay: `${bar * 120}ms` }}
-                  />
-                ))}
-              </div>
+            <div className="flex min-h-[430px] flex-col justify-center rounded-[1.8rem] bg-[#101820] px-5 py-8 text-center">
+              {starting && (
+                <div className="flex flex-col items-center gap-3 text-slate-300">
+                  <Loader2 className="h-7 w-7 animate-spin text-cyan-300" />
+                  <div className="text-sm font-semibold">Creating LiveKit call room...</div>
+                </div>
+              )}
+
+              {!starting && call && (
+                <LiveKitRoom
+                  serverUrl={call.url}
+                  token={call.token}
+                  connect
+                  audio
+                  video={false}
+                  onDisconnected={onClose}
+                  style={{ display: "flex", minHeight: 360, flexDirection: "column", justifyContent: "center" }}
+                >
+                  <VoiceAssistantPanel selected={selected} profile={profile} />
+                  <RoomAudioRenderer />
+                </LiveKitRoom>
+              )}
+
+              {!starting && !call && (
+                <div className="text-center">
+                  <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-amber-500/15 text-amber-200">
+                    <Phone className="h-8 w-8" />
+                  </div>
+                  <div className="text-lg font-bold">Voice setup needed</div>
+                  <p className="mt-2 text-xs leading-relaxed text-slate-400">
+                    {error || "Live voice is not connected in this environment."}
+                  </p>
+                  {missing.length ? (
+                    <div className="mt-4 rounded-2xl border border-amber-500/20 bg-amber-500/10 p-3 text-left text-xs text-amber-100">
+                      <div className="mb-1 font-bold">Missing env</div>
+                      {missing.map((key) => (
+                        <div key={key}>{key}</div>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+              )}
             </div>
           </div>
 
           <div>
-            <div className="mb-3 rounded-2xl border border-slate-800 bg-slate-900 p-4">
-              <div className="text-[11px] font-bold uppercase tracking-wide text-slate-500">Call goal</div>
-              <p className="mt-1 text-sm leading-relaxed text-slate-300">
-                {String(content.reason ?? "Confirm customer requirement, answer key questions, and reserve the next appointment or payment step.")}
-              </p>
-            </div>
-
-            <div className="space-y-3">
-              {transcript.slice(0, Math.max(1, step)).map((line, index) => (
-                <div key={`${line.speaker}-${index}`} className="rounded-2xl border border-slate-800 bg-slate-900 p-4">
-                  <div className={`mb-1 text-xs font-bold ${line.speaker === "AI Call Agent" ? "text-cyan-300" : "text-emerald-300"}`}>
-                    {line.speaker}
+            {call ? (
+              <div className="space-y-4">
+                <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-4">
+                  <div className="flex items-center gap-2 text-sm font-bold text-emerald-200">
+                    <CheckCircle2 className="h-4 w-4" />
+                    LiveKit room active
                   </div>
-                  <p className="text-sm leading-relaxed text-slate-200">{line.text}</p>
+                  <p className="mt-1 text-xs leading-relaxed text-emerald-100/80">
+                    Room: {call.room}. The ServeOps voice worker reads the room metadata and runs the call using the customer context generated from WhatsApp.
+                  </p>
                 </div>
-              ))}
-            </div>
-
-            {complete && (
-              <div className="mt-4 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-4">
-                <div className="flex items-center gap-2 text-sm font-bold text-emerald-200">
-                  <CheckCircle2 className="h-4 w-4" />
-                  Appointment outcome created
+                <div className="rounded-2xl border border-slate-800 bg-slate-900 p-4">
+                  <div className="text-[11px] font-bold uppercase tracking-wide text-slate-500">Agent context</div>
+                  <div className="mt-3 grid gap-2 text-xs text-slate-300 md:grid-cols-2">
+                    <div className="rounded-xl bg-black/20 p-3">
+                      <div className="text-slate-500">Customer</div>
+                      <div className="font-semibold text-white">{String(call.metadata.customer_name ?? selected.name)}</div>
+                    </div>
+                    <div className="rounded-xl bg-black/20 p-3">
+                      <div className="text-slate-500">Service</div>
+                      <div className="font-semibold text-white">{String(call.metadata.service_name ?? "Recommended package")}</div>
+                    </div>
+                    <div className="rounded-xl bg-black/20 p-3">
+                      <div className="text-slate-500">Availability</div>
+                      <div className="font-semibold text-white">{String(call.metadata.availability ?? "Next available slot")}</div>
+                    </div>
+                    <div className="rounded-xl bg-black/20 p-3">
+                      <div className="text-slate-500">Goal</div>
+                      <div className="font-semibold text-white">{String(call.metadata.call_goal ?? "Confirm next step")}</div>
+                    </div>
+                  </div>
                 </div>
-                <p className="mt-1 text-xs leading-relaxed text-emerald-100/80">
-                  Slot reserved: {chosenSlot}. Owner should approve the generated invoice/proposal before sending final confirmation.
-                </p>
+                <div className="rounded-2xl border border-slate-800 bg-slate-900 p-4">
+                  <div className="text-sm font-bold text-white">How this works in production</div>
+                  <p className="mt-1 text-xs leading-relaxed text-slate-400">
+                    The owner approves the call, ServeOps creates a LiveKit room, the Python voice worker joins as the AI agent, then the booking tool posts the outcome back into the approval queue.
+                  </p>
+                </div>
               </div>
+            ) : (
+              <ScriptFallbackPanel item={item} selected={selected} profile={profile} />
             )}
           </div>
         </div>
@@ -1266,11 +1447,14 @@ export default function LiveSimulatorPage() {
         </div>
       </div>
       {callItem && (
-        <CallSimulationModal
+        <LiveCallAgentModal
           item={callItem}
           selected={selected}
           profile={businessProfile}
-          onClose={() => setCallItem(null)}
+          onClose={() => {
+            setCallItem(null);
+            if (conversationId) void loadDetail(conversationId);
+          }}
         />
       )}
     </main>
