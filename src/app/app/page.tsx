@@ -1670,7 +1670,7 @@ export default function LiveSimulatorPage() {
         )}
 
         <div className="grid min-h-0 flex-1 items-start gap-5 lg:grid-cols-[minmax(390px,430px)_minmax(0,1fr)]">
-          <div className="min-h-0 overflow-y-auto pb-4 lg:overflow-visible">
+          <div className="min-h-0 overflow-y-auto pb-4 pr-2">
             <WhatsAppPhone
               contacts={contacts}
               selected={selected}
