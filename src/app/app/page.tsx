@@ -184,14 +184,17 @@ const DEFAULT_CUSTOM_SCENARIO = {
 };
 
 const DEMO_SCENARIO_SUGGESTIONS: Array<{
+  label?: string;
   business: BusinessProfileForm;
   customer: typeof DEFAULT_CUSTOM_SCENARIO;
 }> = [
   {
+    label: "Tuition",
     business: DEFAULT_BUSINESS_FORM,
     customer: DEFAULT_CUSTOM_SCENARIO,
   },
   {
+    label: "F&B",
     business: {
       businessName: "Kopi & Bowl Catering",
       industry: "F&B catering",
@@ -215,6 +218,7 @@ const DEMO_SCENARIO_SUGGESTIONS: Array<{
     },
   },
   {
+    label: "Aircon",
     business: {
       businessName: "CoolCare Aircon Services",
       industry: "Aircon servicing and repair",
@@ -238,6 +242,7 @@ const DEMO_SCENARIO_SUGGESTIONS: Array<{
     },
   },
   {
+    label: "Salon",
     business: {
       businessName: "Glow Bridal Studio",
       industry: "Salon / spa",
@@ -261,6 +266,7 @@ const DEMO_SCENARIO_SUGGESTIONS: Array<{
     },
   },
   {
+    label: "Renovation",
     business: {
       businessName: "NestCraft Renovation",
       industry: "Renovation contractor",
@@ -281,6 +287,270 @@ const DEMO_SCENARIO_SUGGESTIONS: Array<{
       segment: "Renovation",
       message:
         "Hi, I just got keys to my 4-room BTO in Tampines. Can you schedule a site visit and send a proposal with package estimate?",
+    },
+  },
+  {
+    label: "Sports Turf",
+    business: {
+      businessName: "Weekend Turf Arena",
+      industry: "Sports turf booking",
+      offerSummary: "Cricket, football, and pickleball court bookings for community groups and corporate teams.",
+      paymentTerms: "Full payment by PayNow to confirm recurring bookings.",
+      availability: "Saturday 8am, Sunday 8am, or weekday evenings after 7pm",
+      tone: "sporty, clear, friendly",
+      servicesText: [
+        "Cricket hourly | 50 | Hourly cricket turf booking",
+        "Pickleball hourly | 80 | Hourly pickleball court booking",
+        "Football turf hourly | 120 | Full-pitch football booking",
+      ].join("\n"),
+    },
+    customer: {
+      name: "Ravi Kumar",
+      company: "Sports group organiser",
+      phone: "+6597001205",
+      segment: "Turf booking",
+      message:
+        "Hi, I want to book weekly twice, Saturday and Sunday, 2 hours each for cricket. Can you confirm the total price and send invoice?",
+    },
+  },
+  {
+    label: "Clinic",
+    business: {
+      businessName: "CareBridge Family Clinic",
+      industry: "Healthcare clinic",
+      offerSummary: "GP appointments, health screening, vaccination, and corporate medical checkup packages.",
+      paymentTerms: "Payment after consultation by card, PayNow, or company invoice for corporate packages.",
+      availability: "Tomorrow 9:30am, Friday 2pm, or Saturday 11am",
+      tone: "calm, precise, reassuring",
+      servicesText: [
+        "GP Consultation | 45 | Standard doctor consultation",
+        "Health Screening Basic | 180 | Blood test, review, and report",
+        "Corporate Vaccination Package | 600 | Vaccination package for up to 10 staff",
+      ].join("\n"),
+    },
+    customer: {
+      name: "Mei Ling",
+      company: "HR manager",
+      phone: "+6597001206",
+      segment: "Clinic appointment",
+      message:
+        "Hi, we need health screening for 8 staff next week. Can you share package pricing, available slots, and invoice details?",
+    },
+  },
+  {
+    label: "Accounting",
+    business: {
+      businessName: "LedgerWise Accounting",
+      industry: "Accounting and bookkeeping",
+      offerSummary: "Bookkeeping, GST filing, payroll, and annual return support for small companies.",
+      paymentTerms: "Monthly retainer billed upfront by bank transfer.",
+      availability: "Tomorrow 4pm, Thursday 10am, or Friday 3pm",
+      tone: "clear, trustworthy, professional",
+      servicesText: [
+        "Monthly Bookkeeping | 350 | Monthly transaction categorisation and reports",
+        "GST Filing Support | 280 | GST preparation and filing support",
+        "Payroll Setup | 420 | Payroll configuration for up to 10 employees",
+      ].join("\n"),
+    },
+    customer: {
+      name: "Aaron Chua",
+      company: "Startup founder",
+      phone: "+6597001207",
+      segment: "Accounting service",
+      message:
+        "Hi, I run a small startup and need monthly bookkeeping plus GST filing. Can you send pricing, proposal, and first month invoice?",
+    },
+  },
+  {
+    label: "Legal",
+    business: {
+      businessName: "ClausePoint Legal",
+      industry: "Legal services",
+      offerSummary: "Contract review, business agreements, and legal consultation for SMEs.",
+      paymentTerms: "Consultation fee upfront, project balance before final document release.",
+      availability: "Tomorrow 5pm, Thursday 2pm, or Friday 11am",
+      tone: "careful, plain-English, professional",
+      servicesText: [
+        "Contract Review | 450 | Review one business contract with comments",
+        "Founder Agreement Draft | 900 | Draft agreement for small founding teams",
+        "Legal Consultation | 220 | One-hour SME legal consultation",
+      ].join("\n"),
+    },
+    customer: {
+      name: "Sophia Tan",
+      company: "Agency owner",
+      phone: "+6597001208",
+      segment: "Legal consultation",
+      message:
+        "Hi, I need a service agreement reviewed urgently before signing. Can you quote, schedule a call, and invoice me if I confirm?",
+    },
+  },
+  {
+    label: "Fitness",
+    business: {
+      businessName: "FitNest Studio",
+      industry: "Fitness studio",
+      offerSummary: "Personal training, small group classes, and wellness programmes for busy professionals.",
+      paymentTerms: "Package payment upfront by PayNow before first session.",
+      availability: "Tuesday 7pm, Saturday 9am, or Sunday 10am",
+      tone: "energetic, supportive, concise",
+      servicesText: [
+        "Personal Training Session | 90 | One private training session",
+        "8 Session PT Package | 640 | Eight-session personal training package",
+        "Corporate Wellness Class | 480 | Group class for up to 12 staff",
+      ].join("\n"),
+    },
+    customer: {
+      name: "Natalie Wong",
+      company: "Corporate team lead",
+      phone: "+6597001209",
+      segment: "Fitness booking",
+      message:
+        "Hi, can you run weekly corporate wellness classes for 10 people for one month? Please send package pricing and invoice.",
+    },
+  },
+  {
+    label: "Photography",
+    business: {
+      businessName: "FrameHaus Studio",
+      industry: "Photography studio",
+      offerSummary: "Product shoots, event photography, and brand content packages for small businesses.",
+      paymentTerms: "50% deposit to reserve shoot date, balance before edited files delivery.",
+      availability: "Friday 10am, Saturday 2pm, or Monday 11am",
+      tone: "creative, organised, polished",
+      servicesText: [
+        "Product Shoot Basic | 380 | Shoot up to 10 products with edits",
+        "Event Photography Hourly | 180 | Hourly event photography coverage",
+        "Brand Content Package | 1200 | Planning, shoot, and edited content set",
+      ].join("\n"),
+    },
+    customer: {
+      name: "Jasmine Goh",
+      company: "E-commerce seller",
+      phone: "+6597001210",
+      segment: "Product shoot",
+      message:
+        "Hi, I need product photos for 20 skincare items next week. Can you quote, suggest a shoot slot, and send deposit invoice?",
+    },
+  },
+  {
+    label: "Cleaning",
+    business: {
+      businessName: "SparkSpace Cleaning",
+      industry: "Commercial cleaning",
+      offerSummary: "Office cleaning, post-renovation cleaning, and recurring cleaning plans for SMEs.",
+      paymentTerms: "Deposit before first cleaning, monthly recurring invoices for ongoing plans.",
+      availability: "Tomorrow 8am, Saturday 9am, or Monday 7am",
+      tone: "efficient, reliable, practical",
+      servicesText: [
+        "Office Cleaning Visit | 160 | One standard office cleaning visit",
+        "Post Renovation Cleaning | 650 | Deep clean after renovation handover",
+        "Weekly Office Plan | 520 | Four office cleaning visits per month",
+      ].join("\n"),
+    },
+    customer: {
+      name: "Benjamin Lee",
+      company: "Office admin",
+      phone: "+6597001211",
+      segment: "Cleaning request",
+      message:
+        "Hi, we need weekly office cleaning for our small office. Can you share monthly pricing and invoice us for the first month?",
+    },
+  },
+  {
+    label: "Pet Grooming",
+    business: {
+      businessName: "ZenPet Grooming",
+      industry: "Pet grooming",
+      offerSummary: "Dog grooming, spa treatment, and recurring grooming plans for pet owners.",
+      paymentTerms: "Payment after appointment by PayNow or card. Deposits required for recurring packages.",
+      availability: "Wednesday 3pm, Saturday 1pm, or Sunday 5pm",
+      tone: "gentle, friendly, reassuring",
+      servicesText: [
+        "Small Dog Grooming | 75 | Full grooming for small dog breeds",
+        "Large Dog Grooming | 130 | Full grooming for large dog breeds",
+        "Monthly Grooming Plan | 260 | Two grooming sessions per month",
+      ].join("\n"),
+    },
+    customer: {
+      name: "Clara Ng",
+      company: "Pet owner",
+      phone: "+6597001212",
+      segment: "Pet grooming",
+      message:
+        "Hi, I have two small dogs and want monthly grooming. Can you share pricing, available weekend slots, and invoice if I confirm?",
+    },
+  },
+  {
+    label: "Logistics",
+    business: {
+      businessName: "SwiftCart Logistics",
+      industry: "Local delivery and logistics",
+      offerSummary: "Same-day delivery, recurring courier routes, and event logistics for small businesses.",
+      paymentTerms: "Monthly invoice for recurring routes, upfront payment for ad-hoc jobs.",
+      availability: "Today 4pm, tomorrow 9am, or Friday 1pm",
+      tone: "fast, dependable, concise",
+      servicesText: [
+        "Same-Day Delivery | 35 | One same-day local delivery",
+        "Recurring Courier Route | 420 | Weekly courier route package",
+        "Event Logistics Support | 950 | Delivery coordination for small events",
+      ].join("\n"),
+    },
+    customer: {
+      name: "Marcus Ho",
+      company: "Bakery owner",
+      phone: "+6597001213",
+      segment: "Delivery request",
+      message:
+        "Hi, I need recurring delivery twice a week for bakery orders. Can you quote monthly pricing and send a proposal?",
+    },
+  },
+  {
+    label: "Insurance",
+    business: {
+      businessName: "ShieldPath Advisory",
+      industry: "Insurance advisory",
+      offerSummary: "Life, health, and business insurance consultations for individuals and SME owners.",
+      paymentTerms: "No consultation fee. Policy premiums paid directly after customer confirmation.",
+      availability: "Tomorrow 12pm, Thursday 6pm, or Saturday 10am",
+      tone: "advisory, clear, trustworthy",
+      servicesText: [
+        "Protection Review | 0 | Free protection gap consultation",
+        "SME Employee Benefits Review | 250 | Benefits review for small teams",
+        "Business Insurance Advisory | 350 | Risk review and recommendation report",
+      ].join("\n"),
+    },
+    customer: {
+      name: "Ivan Teo",
+      company: "SME owner",
+      phone: "+6597001214",
+      segment: "Insurance advisory",
+      message:
+        "Hi, I want to review insurance for my small team of 6 staff. Can you prepare options and schedule a consultation?",
+    },
+  },
+  {
+    label: "Event Planner",
+    business: {
+      businessName: "Gatherly Events",
+      industry: "Event planning",
+      offerSummary: "Corporate events, birthday parties, and launch event coordination for SMEs and families.",
+      paymentTerms: "40% deposit to confirm, 40% before event, 20% after event close.",
+      availability: "Tomorrow 3pm, Friday 5pm, or Saturday 12pm",
+      tone: "organised, warm, polished",
+      servicesText: [
+        "Birthday Party Planning | 850 | Planning and vendor coordination",
+        "Corporate Event Package | 2200 | End-to-end event planning for SMEs",
+        "Product Launch Support | 3200 | Launch event planning and onsite coordination",
+      ].join("\n"),
+    },
+    customer: {
+      name: "Rachel Sim",
+      company: "Product manager",
+      phone: "+6597001215",
+      segment: "Event planning",
+      message:
+        "Hi, we are planning a product launch for 80 guests next month. Can you send proposal, estimated budget, and deposit invoice?",
     },
   },
 ];
@@ -622,6 +892,12 @@ function BusinessScenarioModal({
     setCustomScenario(suggestion.customer);
   }
 
+  function applyPresetScenario(suggestion: (typeof DEMO_SCENARIO_SUGGESTIONS)[number]) {
+    setForm(suggestion.business);
+    setCustomScenario(suggestion.customer);
+    setSuggestError("");
+  }
+
   async function fillWithLLM() {
     setSuggesting("all");
     setSuggestError("");
@@ -713,6 +989,48 @@ function BusinessScenarioModal({
               {suggestError}
             </div>
           ) : null}
+          <div className="mb-5">
+            <div className="mb-2 flex items-center justify-between gap-3">
+              <div>
+                <div className="text-[11px] font-bold uppercase tracking-wide text-slate-500">Try ready-made SME scenarios</div>
+                <p className="mt-0.5 text-xs text-slate-600">Tap one to refill the business profile and WhatsApp customer message.</p>
+              </div>
+              <span className="shrink-0 rounded-full border border-slate-700 px-2.5 py-1 text-[11px] font-semibold text-slate-400">
+                {DEMO_SCENARIO_SUGGESTIONS.length} presets
+              </span>
+            </div>
+            <div className="-mx-1 flex gap-3 overflow-x-auto px-1 pb-2">
+              {DEMO_SCENARIO_SUGGESTIONS.map((suggestion) => {
+                const active = suggestion.business.businessName === form.businessName;
+                return (
+                  <button
+                    key={`${suggestion.label}-${suggestion.business.businessName}`}
+                    type="button"
+                    onClick={() => applyPresetScenario(suggestion)}
+                    className={`min-w-[190px] rounded-2xl border p-3 text-left transition ${
+                      active
+                        ? "border-emerald-400/60 bg-emerald-500/15"
+                        : "border-slate-800 bg-slate-900 hover:border-cyan-500/50 hover:bg-cyan-500/10"
+                    }`}
+                  >
+                    <div className="mb-2 flex items-center justify-between gap-2">
+                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                        active ? "bg-emerald-500/20 text-emerald-200" : "bg-cyan-500/10 text-cyan-300"
+                      }`}>
+                        {suggestion.label ?? suggestion.business.industry}
+                      </span>
+                      {active ? <CheckCircle2 className="h-3.5 w-3.5 text-emerald-300" /> : null}
+                    </div>
+                    <div className="truncate text-sm font-bold text-white">{suggestion.business.businessName}</div>
+                    <div className="mt-1 truncate text-xs text-slate-500">{suggestion.business.industry}</div>
+                    <div className="mt-2 line-clamp-2 text-[11px] leading-relaxed text-slate-400">
+                      {suggestion.customer.message}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
           <div className="grid gap-5">
             <BusinessSetupPanel
               form={form}
