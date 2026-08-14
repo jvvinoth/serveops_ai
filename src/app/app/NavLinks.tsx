@@ -1,17 +1,12 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, MessageSquare, CheckSquare, Wifi, Database, ClipboardList, Briefcase, Receipt } from "lucide-react";
+import { CheckSquare, FileText, PlaySquare } from "lucide-react";
 
 const links = [
-  { href: "/app", label: "Command Center", icon: LayoutDashboard },
-  { href: "/app/inbox", label: "Inbox", icon: MessageSquare },
+  { href: "/app", label: "Live Demo", icon: PlaySquare },
+  { href: "/app/generated-docs", label: "Generated Docs", icon: FileText },
   { href: "/app/approvals", label: "Approvals", icon: CheckSquare },
-  { href: "/app/proposals", label: "Proposals", icon: Briefcase },
-  { href: "/app/invoices", label: "Invoices", icon: Receipt },
-  { href: "/app/tasks", label: "Tasks", icon: ClipboardList },
-  { href: "/app/data", label: "Business Data", icon: Database },
-  { href: "/app/connect", label: "WhatsApp", icon: Wifi },
 ];
 
 export default function NavLinks() {

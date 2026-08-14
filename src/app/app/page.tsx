@@ -590,6 +590,20 @@ function DeliverableCard({ item }: { item: ApprovalItem }) {
           ))}
         </div>
       )}
+
+      {(kind === "proposal" || kind === "invoice") && (
+        <div className="mt-4 border-t border-white/10 pt-3">
+          <a
+            href={kind === "proposal" ? `/deck/${item.id}` : `/invoice/${item.id}`}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-2 rounded-xl bg-white px-3 py-2 text-xs font-bold text-slate-950 hover:bg-slate-200"
+          >
+            {kind === "proposal" ? "Open Pitch Deck" : "Open Invoice"}
+            <ChevronRight className="h-3.5 w-3.5" />
+          </a>
+        </div>
+      )}
     </article>
   );
 }
@@ -605,10 +619,10 @@ function DeliverablesPanel({ run }: { run: AgentRun | null }) {
           <p className="text-xs text-slate-500">Each card is stored as an approval item for the owner.</p>
         </div>
         <a
-          href="/app/approvals"
+          href="/app/generated-docs"
           className="flex items-center gap-1 rounded-lg border border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-300 hover:border-slate-500 hover:text-white"
         >
-          Open approvals <ChevronRight className="h-3.5 w-3.5" />
+          Open docs <ChevronRight className="h-3.5 w-3.5" />
         </a>
       </div>
 
