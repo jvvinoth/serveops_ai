@@ -596,6 +596,26 @@ function BusinessScenarioModal({
     };
   }
 
+  async function generateField(targetSection: "business" | "customer", targetField: string) {
+    const res = await fetch("/api/scenarios/suggest", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        businessName: form.businessName,
+        industry: form.industry,
+        targetSection,
+        targetField,
+        current: {
+          ...form,
+          customer: customScenario,
+        },
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Unable to generate field suggestion");
+    return String(data.value ?? "");
+  }
+
   function fillFullScenario() {
     const suggestion = pickDemoSuggestion();
     setForm(suggestion.business);
@@ -621,8 +641,8 @@ function BusinessScenarioModal({
     setSuggesting(field);
     setSuggestError("");
     try {
-      const scenario = await generateScenario();
-      setForm({ ...form, [field]: scenario.business[field] });
+      const value = await generateField("business", field);
+      setForm({ ...form, [field]: value });
     } catch {
       const suggestion = pickDemoSuggestion();
       setForm({ ...form, [field]: suggestion.business[field] });
@@ -636,8 +656,8 @@ function BusinessScenarioModal({
     setSuggesting(field);
     setSuggestError("");
     try {
-      const scenario = await generateScenario();
-      setCustomScenario({ ...customScenario, [field]: scenario.customer[field] });
+      const value = await generateField("customer", field);
+      setCustomScenario({ ...customScenario, [field]: value });
     } catch {
       const suggestion = pickDemoSuggestion();
       setCustomScenario({ ...customScenario, [field]: suggestion.customer[field] });

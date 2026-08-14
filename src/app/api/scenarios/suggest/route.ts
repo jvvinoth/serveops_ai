@@ -5,6 +5,8 @@ type SuggestRequest = {
   businessName?: string;
   industry?: string;
   current?: Record<string, unknown>;
+  targetSection?: "business" | "customer";
+  targetField?: string;
 };
 
 function text(value: unknown, fallback = "") {
@@ -47,11 +49,68 @@ function fallbackScenario(businessName: string, industry: string) {
   };
 }
 
+function fallbackField(targetSection: "business" | "customer", targetField: string, businessName: string, industry: string) {
+  const scenario = fallbackScenario(businessName, industry);
+  const source = targetSection === "business" ? scenario.business : scenario.customer;
+  return source[targetField as keyof typeof source] ?? "";
+}
+
+const FIELD_GUIDANCE: Record<string, string> = {
+  "business.businessName": "Suggest one realistic SME business name. Return only the name.",
+  "business.industry": "Suggest one concise industry/category. Return only the industry.",
+  "business.offerSummary": "Write one practical sentence explaining what this SME offers.",
+  "business.paymentTerms": "Write one concise Singapore SME payment term sentence.",
+  "business.availability": "Suggest three realistic appointment slots in plain English.",
+  "business.tone": "Suggest three comma-separated tone words.",
+  "business.servicesText":
+    "Create exactly three newline-separated service lines. Format each line exactly: Service name | SGD price | short description. Prices must be realistic for the typed business/industry.",
+  "customer.name": "Suggest one realistic Singapore customer name. Return only the name.",
+  "customer.company": "Suggest one short customer context, such as Parent inquiry, Cafe owner, Office manager, or Homeowner.",
+  "customer.phone": "Suggest one fake Singapore demo phone number starting with +65970012.",
+  "customer.segment": "Suggest one short customer scenario segment.",
+  "customer.message":
+    "Write one realistic WhatsApp customer message based on the business profile and service catalog. It should ask for package/pricing, booking/call or appointment, and invoice/deposit if confirmed.",
+};
+
 export async function POST(req: NextRequest) {
   try {
     const body = (await req.json()) as SuggestRequest;
     const businessName = text(body.businessName || body.current?.businessName, "Demo SME");
     const industry = text(body.industry || body.current?.industry, "SME services");
+    const targetSection = body.targetSection;
+    const targetField = body.targetField;
+
+    if (targetSection && targetField) {
+      if (!process.env.OPENROUTER_API_KEY) {
+        return NextResponse.json({
+          value: fallbackField(targetSection, targetField, businessName, industry),
+          source: "fallback",
+        });
+      }
+
+      const fieldKey = `${targetSection}.${targetField}`;
+      const system = [
+        "You generate exactly one field for an SME hackathon demo scenario.",
+        "Use the provided business/customer context.",
+        "Output only valid JSON in this shape: {\"value\":\"...\"}.",
+        "Do not update unrelated fields.",
+        FIELD_GUIDANCE[fieldKey] || "Return a concise realistic value for this field.",
+      ].join(" ");
+
+      const raw = await callLLM(
+        system,
+        JSON.stringify({
+          targetSection,
+          targetField,
+          businessName,
+          industry,
+          current: body.current ?? {},
+        })
+      );
+      const parsed = parseJson(raw);
+      const value = text(parsed?.value, text(fallbackField(targetSection, targetField, businessName, industry)));
+      return NextResponse.json({ value, source: parsed?.value ? "llm" : "fallback" });
+    }
 
     if (!process.env.OPENROUTER_API_KEY) {
       return NextResponse.json({ scenario: fallbackScenario(businessName, industry), source: "fallback" });
