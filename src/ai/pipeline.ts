@@ -97,9 +97,89 @@ function pickProfileService(messageBody: string, businessProfile?: BusinessProfi
   return scored[0]?.score > 0 ? scored[0].service : services[0];
 }
 
+const NUMBER_WORDS: Record<string, number> = {
+  one: 1,
+  once: 1,
+  two: 2,
+  twice: 2,
+  twise: 2,
+  three: 3,
+  four: 4,
+  five: 5,
+  six: 6,
+  seven: 7,
+  eight: 8,
+  nine: 9,
+  ten: 10,
+};
+
+function numberFromText(value: string | undefined): number | null {
+  if (!value) return null;
+  const numeric = Number(value);
+  if (Number.isFinite(numeric) && numeric > 0) return numeric;
+  return NUMBER_WORDS[value.toLowerCase()] ?? null;
+}
+
+function countMentionedDays(lower: string) {
+  const dayPatterns = [
+    /\bmon(?:day)?\b/,
+    /\btue(?:s|sday)?\b/,
+    /\bwed(?:nesday)?\b/,
+    /\bthu(?:rs|rsday)?\b/,
+    /\bfri(?:day)?\b/,
+    /\bsat(?:urday)?\b|\bsatuday\b/,
+    /\bsun(?:day)?\b/,
+  ];
+  return dayPatterns.reduce((count, pattern) => count + (pattern.test(lower) ? 1 : 0), 0);
+}
+
+function inferQuantityFromMessage(messageBody: string, service?: { name?: string; description?: string }) {
+  const lower = messageBody.toLowerCase();
+  const serviceText = `${service?.name ?? ""} ${service?.description ?? ""}`.toLowerCase();
+  const hourlyService = /\bhourly\b|\bper hour\b|\b\/hr\b|\bhr\b|\bhour\b/.test(serviceText);
+  const hourMatch = lower.match(/\b(\d+(?:\.\d+)?|one|two|three|four|five|six|seven|eight|nine|ten)\s*(?:hours?|hrs?|hr)\b/);
+  const hours = numberFromText(hourMatch?.[1]);
+  const frequencyMatch = lower.match(/\b(\d+(?:\.\d+)?|once|twice|twise|one|two|three|four|five|six|seven)\s*(?:times?|sessions?|bookings?)\b/);
+  const weeklyFrequencyMatch = lower.match(/\b(?:weekly|week)\s+(\d+(?:\.\d+)?|once|twice|twise|one|two|three|four|five|six|seven)\b/);
+  const explicitFrequency = numberFromText(frequencyMatch?.[1]) ?? numberFromText(weeklyFrequencyMatch?.[1]);
+  const dayCount = countMentionedDays(lower);
+  const frequency = Math.max(explicitFrequency ?? 0, dayCount || 0, /\bweekends?\b/.test(lower) ? 2 : 0, 1);
+
+  if (hourlyService || hours) {
+    return {
+      qty: Math.max(1, (hours ?? 1) * frequency),
+      unitLabel: "hour",
+      explanation: hours && frequency > 1 ? `${frequency} booking days × ${hours} hours` : hours ? `${hours} hours` : `${frequency} booking hours`,
+    };
+  }
+
+  return {
+    qty: Math.max(1, explicitFrequency ?? 1),
+    unitLabel: "package",
+    explanation: explicitFrequency && explicitFrequency > 1 ? `${explicitFrequency} sessions/packages` : "1 package",
+  };
+}
+
+function estimatePricingFromMessage(messageBody: string, businessProfile?: BusinessProfile) {
+  const service = pickProfileService(messageBody, businessProfile);
+  if (!service) return null;
+  const quantity = inferQuantityFromMessage(messageBody, service);
+  const unitPrice = Number(service.priceSgd);
+  const totalSgd = Math.round(unitPrice * quantity.qty * 100) / 100;
+
+  return {
+    service,
+    qty: quantity.qty,
+    unitLabel: quantity.unitLabel,
+    explanation: quantity.explanation,
+    unitPrice,
+    totalSgd,
+  };
+}
+
 function estimateValueFromMessage(messageBody: string, businessProfile?: BusinessProfile): number {
-  const profileService = pickProfileService(messageBody, businessProfile);
-  if (profileService) return Number(profileService.priceSgd);
+  const profilePricing = estimatePricingFromMessage(messageBody, businessProfile);
+  if (profilePricing) return profilePricing.totalSgd;
 
   const lower = messageBody.toLowerCase();
 
@@ -127,7 +207,8 @@ function estimateValueFromMessage(messageBody: string, businessProfile?: Busines
 }
 
 function demoPackageForMessage(messageBody: string, businessProfile?: BusinessProfile) {
-  const profileService = pickProfileService(messageBody, businessProfile);
+  const profilePricing = estimatePricingFromMessage(messageBody, businessProfile);
+  const profileService = profilePricing?.service;
   if (profileService) {
     const industry = businessProfile?.industry || "SME service";
     const packageName = profileService.name;
@@ -135,7 +216,7 @@ function demoPackageForMessage(messageBody: string, businessProfile?: BusinessPr
 
     return {
       packageName,
-      lineItem: `${packageName} - ${description}`,
+      lineItem: `${packageName} - ${description}${profilePricing ? ` (${profilePricing.explanation})` : ""}`,
       titlePrefix: `${packageName} Proposal`,
       solution: `We will handle the customer's request using ${packageName}, with clear scope, timing, price, and owner approval before anything is sent.`,
       solutionBullets: [
@@ -297,10 +378,11 @@ function fallbackRouterOutput(messageBody: string, businessProfile?: BusinessPro
 function normalizeRouterOutput(routerOutput: RouterOutput, messageBody: string, businessProfile?: BusinessProfile): RouterOutput {
   const inferred = fallbackRouterOutput(messageBody, businessProfile);
   const estimatedValue = Number(routerOutput.estimatedValue ?? 0);
+  const profilePricing = estimatePricingFromMessage(messageBody, businessProfile);
 
   return {
     ...routerOutput,
-    estimatedValue: estimatedValue > 0 ? estimatedValue : inferred.estimatedValue,
+    estimatedValue: profilePricing ? inferred.estimatedValue : estimatedValue > 0 ? estimatedValue : inferred.estimatedValue,
     currency: routerOutput.currency || inferred.currency,
     urgency: routerOutput.urgency === "high" || inferred.urgency === "high" ? "high" : routerOutput.urgency || inferred.urgency,
     agents: Array.from(new Set([...(routerOutput.agents ?? []), ...inferred.agents])),
@@ -313,19 +395,24 @@ function hasWeakMoneyResult(type: string, result: object, routerOutput: RouterOu
   const body = result as Record<string, unknown>;
   const expectedValue = Number(routerOutput.estimatedValue ?? 0);
   const minimumUsefulValue = expectedValue > 0 ? expectedValue * 0.75 : 1;
+  const maximumUsefulValue = expectedValue > 0 ? expectedValue * 1.5 : Number.POSITIVE_INFINITY;
+
+  function isSuspicious(value: number) {
+    return value < minimumUsefulValue || value > maximumUsefulValue;
+  }
 
   if (type === "sales") {
     const quote = body.quote as { totalSgd?: unknown } | undefined;
-    return Number(quote?.totalSgd ?? 0) < minimumUsefulValue;
+    return isSuspicious(Number(quote?.totalSgd ?? 0));
   }
 
   if (type === "proposal") {
     const pricing = body.pricingSummary as { totalSgd?: unknown } | undefined;
-    return Number(pricing?.totalSgd ?? 0) < minimumUsefulValue;
+    return isSuspicious(Number(pricing?.totalSgd ?? 0));
   }
 
   if (type === "invoice") {
-    return Number(body.totalSgd ?? 0) < minimumUsefulValue;
+    return isSuspicious(Number(body.totalSgd ?? 0));
   }
 
   return false;
@@ -343,6 +430,7 @@ function fallbackAgentResult(
   const clientBusiness = extractBusinessName(messageBody, customer);
   const need = extractCustomerNeed(messageBody);
   const demoPackage = demoPackageForMessage(messageBody, businessProfile);
+  const profilePricing = estimatePricingFromMessage(messageBody, businessProfile);
   const providerName = businessProfile?.businessName || "BrightLane Studio";
   const totalSgd = routerOutput.estimatedValue > 0 ? routerOutput.estimatedValue : 3200;
   const depositSgd = totalSgd / 2;
@@ -455,8 +543,8 @@ function fallbackAgentResult(
       lineItems: [
         {
           description: demoPackage.lineItem,
-          qty: 1,
-          unitPrice: totalSgd,
+          qty: profilePricing?.qty ?? 1,
+          unitPrice: profilePricing?.unitPrice ?? totalSgd,
           subtotal: totalSgd,
         },
       ],
@@ -554,7 +642,12 @@ function fallbackAgentResult(
     leadSummary: `${clientName} is asking for launch support and pricing for ${clientBusiness}.`,
     quote: {
       items: [
-        { name: demoPackage.packageName, qty: 1, unitPriceSgd: totalSgd, subtotalSgd: totalSgd },
+        {
+          name: demoPackage.packageName,
+          qty: profilePricing?.qty ?? 1,
+          unitPriceSgd: profilePricing?.unitPrice ?? totalSgd,
+          subtotalSgd: totalSgd,
+        },
       ],
       subtotalSgd: totalSgd,
       gstSgd: 0,

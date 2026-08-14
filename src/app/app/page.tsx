@@ -329,8 +329,19 @@ function parseServices(text: string): BusinessProfile["services"] {
     .map((line) => line.trim())
     .filter(Boolean)
     .map((line) => {
-      const [name = "", price = "0", description = ""] = line.split("|").map((part) => part.trim());
-      return { name, priceSgd: Number(price.replace(/[^0-9.]/g, "")), description };
+      if (line.includes("|")) {
+        const [name = "", price = "0", description = ""] = line.split("|").map((part) => part.trim());
+        return { name, priceSgd: Number(price.replace(/[^0-9.]/g, "")), description };
+      }
+
+      const priceMatch = line.match(/(?:sgd|\$)?\s*(\d+(?:\.\d{1,2})?)\s*$/i);
+      const priceSgd = Number(priceMatch?.[1] ?? 0);
+      const name = priceMatch ? line.slice(0, priceMatch.index).trim().replace(/[-:]+$/, "").trim() : line;
+      const description = /\bhourly\b|\bper hour\b|\b\/hr\b|\bhr\b/i.test(line)
+        ? "Hourly booking rate"
+        : "Service package";
+
+      return { name, priceSgd, description };
     })
     .filter((service) => service.name && service.priceSgd > 0);
 }
